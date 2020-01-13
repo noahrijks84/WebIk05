@@ -39,27 +39,26 @@ db = SQL("sqlite:///finance.db")
 @app.route("/")
 @login_required
 def index():
-    """Show portfolio of stocks"""
+    """Show leaderboard, statistics and game mode chooser"""
     return apology("TODO")
 
 
-@app.route("/buy", methods=["GET", "POST"])
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
-def buy():
-    """Buy shares of stock"""
+def profile():
+    """Show user profile page with statistics and profile picture"""
     return apology("TODO")
 
-
-@app.route("/check", methods=["GET"])
-def check():
-    """Return true if username available, else false, in JSON format"""
-    return jsonify("TODO")
-
-
-@app.route("/history")
+@app.route("/gamepage", methods=["GET", "POST"])
 @login_required
-def history():
-    """Show history of transactions"""
+def gamepage():
+    """Show today's leaderboard, game mode selector and player statistics"""
+    return apology("TODO")
+
+@app.route("/leaderboard")
+@login_required
+def leaderboard():
+    """Show leaderboard"""
     return apology("TODO")
 
 
@@ -111,23 +110,9 @@ def logout():
     return redirect("/")
 
 
-@app.route("/quote", methods=["GET", "POST"])
-@login_required
-def quote():
-    """Get stock quote."""
-    return apology("TODO")
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
-    return apology("TODO")
-
-
-@app.route("/sell", methods=["GET", "POST"])
-@login_required
-def sell():
-    """Sell shares of stock"""
     return apology("TODO")
 
 
