@@ -1,0 +1,65 @@
+1. create pubnub account
+ - used for chat function
+2. setup html/css templates
+3. setup lobby, initialize player
+			   - name: e.g. host or guest
+			   - sign: also H/G
+			   - score: set to 0
+4. get score from html
+
+####
+SETTING UP
+####
+
+5. enter lobby name
+6. listener notified of connectivity + presence
+			   - first player becomes host 
+(*opletten met unsubscriben van lobby van niet guests*)
+
+//Replace ‘main_chat_pub_key’ and ‘main_chat_sub_key’ with 
+your ‘main chat keys’. Replace ‘guess_word_chat_pub_key’ and 
+‘guess_word_chat_sub_key’ with your ‘guess word chat keys’. 
+The uuid’s for the players will either be ‘Host’ if they are the host
+and ‘Guest’ if they are the guest. This is how it will appear
+when they message each other, which they can start doing once the game starts.//
+
+7. subscribe player to lobby and enable presence
+
+####
+GAME
+####
+
+(* niet super belangrijk aangezien we onze eigen game maken, afgezien van chatfunctie *)
+8. create new js program in dir
+
+9. init vars used in game
+
+10. write code to set up chatEngine
+
+11. chat called with keypress (dmv eventListener) except [enter]
+
+12. onMessage adds message to chat
+
+13. onnodige bs over ding wat we niet gaan gebruiken
+
+14. with presence we can check when someone leaves
+
+15. when a connection is established, subscribe to game and publish data to channel
+
+16. call startDraw and draw and, when drawer is finished, endDraw
+
+17. set up clear button to clear canvas
+
+18. if correct word is guessed or time is up, someone else is drawing (*random of op volgorde*)
+(* hier gebruiken ze switch role, als we meerdere mensen willen moeten we ff zelf dit stuk schrijven *)
+
+19. function to guess word (*niet nuttig want wij doen (wss) multiple choice.
+    ze doen ook iets met een bepaald aantal 'tries', kunnen we miss wel gebruiken.
+
+####
+code enz.
+####
+
+Code is niet super moeilijk om te begrijpen, het is het bij elkaar puzzelen wat het lastige gaat worden,
+zeker om uit te vinden wanneer wat moet worden aangeroepen, en het een beetje overzichtelijk te houden.
+
