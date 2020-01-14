@@ -34,11 +34,13 @@ We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 
 /landingpage
 * Dit is de homepage. Dit is de landingpage voor de gebruiker. Hier wordt het spel uitgelegd en de gebruiker kan hier naar de inlogpagina en de registratiepagina verwezen worden
 * Dit wordt een GET request
+
 ![landingpage](https://i.ibb.co/R0p3SFB/Home-page-1.png)
 
 /homepage
 * Dit is de homepage als de gebruiker ingelogd is. De gebruiker kan vanaf hier naar veschillende pagina's navigeren zoals de profielpagina, leaderboard en gamemode. Er verschijnt ook een "burger" dropdown menu.
 * Dit is een POST request.
+
 ![homepage](https://i.ibb.co/YkWfVdb/Home-page-logged-in.png)
 * Dit is hoe het navigatie menu er uit ziet als het aangeklikt is.
 ![navigation](https://i.ibb.co/t4HSqB4/Nav-system.png)
@@ -46,16 +48,19 @@ We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 
 /leaderboard
 * Op deze pagina kan de gebruiker de leadersboard vinden. Dit is een overzicht van de statistieken van alle spelers onderverdeeld in categorieën.
 * Dit is een GET request.
+
 ![leaderboards](https://i.ibb.co/GxgF5z8/Leaderboard-Page.png)
 
 /game
 * Dit is de gamepagina, hier speelt het spel zich af. Er is hier ruimte voor een chatfunctie. Hier komt ook het canvas waarop getekend wordt en waar de spelers kunnen raden wat er getekend is. 
 * Dit is een POST request.
+
 ![game](https://i.ibb.co/DzqmkxQ/Game-page-1.png)
 
 /profile
 * De gebruiker kan hier zijn profiel bekijken. Hier komt de profielinformatie en kan dat ook aangepast worden (wachtwoord veranderen). De statistieken van de speler kunnen hier ook terug gevonden worden.
 * Dit is een POST request.
+
 ![profilepage](https://i.ibb.co/n6wsVtt/Profile-Page.png)
 * Dit is het password change scherm.
 ![changepassword](https://i.ibb.co/1qPMpjK/Change-Password.png)
@@ -63,16 +68,19 @@ We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 
 /lobbypage
 * Hier kan de gebruiker lobbies aanmaken en joinen.
 * Dit is een POST request.
+
 ![lobbypage](https://i.ibb.co/Rpq88hB/Game-page-1.png)
 
 /login
 * Dit is de inlogpagina.
 * Dit is een POST request.
+
 ![login](https://i.ibb.co/syqVdQp/Login-page.png)
 
 /register
 * Dit is de registratiepagina.
 * Dit is een POST request.
+
 ![registration](https://i.ibb.co/FswX08c/Register-Page-1.png)
 
 ### Models/helpers
