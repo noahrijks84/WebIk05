@@ -43,6 +43,7 @@ We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 
 
 ![homepage](https://i.ibb.co/YkWfVdb/Home-page-logged-in.png)
 * Dit is hoe het navigatie menu er uit ziet als het aangeklikt is.
+
 ![navigation](https://i.ibb.co/t4HSqB4/Nav-system.png)
 
 /leaderboard
@@ -63,6 +64,7 @@ We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 
 
 ![profilepage](https://i.ibb.co/n6wsVtt/Profile-Page.png)
 * Dit is het password change scherm.
+
 ![changepassword](https://i.ibb.co/1qPMpjK/Change-Password.png)
 
 /lobbypage
