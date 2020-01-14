@@ -57,7 +57,6 @@ We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 
 * De gebruiker kan hier zijn profiel bekijken. Hier komt de profielinformatie en kan dat ook aangepast worden (wachtwoord veranderen). De statistieken van de speler kunnen hier ook terug gevonden worden.
 * Dit is een POST request.
 ![profilepage](https://i.ibb.co/n6wsVtt/Profile-Page.png)
-* Dit is het change password scherm.
 ![changepassword](https://i.ibb.co/1qPMpjK/Change-Password.png)
 
 /lobbypage
