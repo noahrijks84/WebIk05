@@ -2,7 +2,7 @@
 
 ## Scrivia 
 
-We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 spelers moeten dan raden wat het antwoord is op basis van de tekening en hun kennis. Het is een combinatie van pictionary en trivia spellen. Je kan met je vrienden een lobby maken waarin je een spel kan beginnen. Tussentijds kan je ook chatten. Voordat een spel begint kan je categorieën kiezen en de moeilijkheidsgraag instellen. Op basis van de snelheid waarbij je antwoord krijg je punten en de tekenaar krijgt punten voor iedereen die zijn tekening goed raadt, dit natuurlijk om de tekenaar te stimuleren duidelijke tekeningen te maken. Er is ook een leaderboard en een simpel ranking systeem waarbij je punten krijgt voor je performance en punten aftrek krijgt voor verlies. Gebruikers hebben ook een klein persoonlijk profiel waar ze hun ranking kunnen zien en een profile picture kunnen instellen. 
+Dit is een trivia website waarbij een persoon de trivia tekent en de andere 3 spelers moeten dan raden wat het antwoord is op basis van de tekening en hun kennis. Het is een combinatie van pictionary en trivia spellen. Je kan met je vrienden een lobby maken waarin je een spel kan beginnen. Tussentijds kan je ook chatten. Voordat een spel begint kan je categorieën kiezen en de moeilijkheidsgraag instellen. Op basis van de snelheid waarbij je antwoord krijg je punten en de tekenaar krijgt punten voor iedereen die zijn tekening goed raadt, dit natuurlijk om de tekenaar te stimuleren duidelijke tekeningen te maken. Er is ook een leaderboard en een simpel ranking systeem waarbij je punten krijgt voor je performance en punten aftrek krijgt voor verlies. Gebruikers hebben ook een klein persoonlijk profiel waar ze hun ranking kunnen zien en een profile picture kunnen instellen. 
 
 ### Features 
 
@@ -33,7 +33,7 @@ We maken een trivia website waarbij een persoon de trivia tekent en de andere 3 
 
 /landingpage
 * Dit is de homepage. Dit is de landingpage voor de gebruiker. Hier wordt het spel uitgelegd en de gebruiker kan hier naar de inlogpagina en de registratiepagina verwezen worden
-* Dit wordt een GET request
+* Dit is een GET request
 
 ![landingpage](https://i.ibb.co/R0p3SFB/Home-page-1.png)
 
