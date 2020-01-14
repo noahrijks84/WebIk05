@@ -97,6 +97,7 @@ https://getbootstrap.com/docs/4.1/getting-started/introduction/
 3. jQuery Drawing Plugin. Documentatie: https://www.jqueryscript.net/other/Drawing-Signature-App-jQuery-Canvas.html
 4. Socket. Documentatie: 
 https://socket.io/docs/
+5. Flask-SocketIO. Documentatie: https://flask-socketio.readthedocs.io/en/latest/
 
 
 
