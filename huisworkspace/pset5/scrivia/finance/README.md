@@ -13,7 +13,7 @@ Dit is een trivia website waarbij een persoon de trivia tekent en de andere 3 sp
 
 ### Afhankelijkheden  
 
-1. Databronnen: jService.io
+1. Databronnen: https://opentdb.com/
 2. Externe componenten: Boostrap voor website design, Adobe XD voor concept
 3. Concurrerentie: Sporcle, Queendom
 4. Moeilijkste delen: teken-aspect, lobbies, ranking systeem
