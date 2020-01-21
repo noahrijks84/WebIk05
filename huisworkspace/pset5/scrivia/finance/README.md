@@ -89,6 +89,12 @@ Dit is een trivia website waarbij een persoon de trivia tekent en de andere 3 sp
 
 1. Log out helper functie. Deze nemen we over van finance om gebruikers uit te loggen.
 
+### Databases
+
+1. Database voor user gegevens.
+2. Database voor game statistieken.
+3. Database voor trivia vragen.
+
 ### Plugins/frameworks
 
 1. Flask. Documentatie: http://flask.palletsprojects.com/en/1.1.x/
