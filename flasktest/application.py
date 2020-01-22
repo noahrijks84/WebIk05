@@ -1,0 +1,240 @@
+import os
+from cs50 import SQL
+import time, random
+from flask import Flask, flash, jsonify, redirect, render_template, request, session
+from flask_session import Session
+from flask_socketio import SocketIO, emit, send, join_room, leave_room, rooms
+from tempfile import mkdtemp
+from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
+from werkzeug.security import check_password_hash, generate_password_hash
+from helpers import apology, login_required, lookup, usd
+
+# Configure application
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app, manage_session=False)
+
+# Ensure responses aren't cached
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+# Configure CS50 Library to use SQLite database
+db = SQL("sqlite:///finance.db")
+trivdb = SQL("sqlite:///trivdb.db")
+
+current_users = {}
+correct_answers = {}
+current_hosts = {}
+
+@app.route("/leaverequest")
+@login_required
+def on_pageleave():
+    username = session["username"]
+    current_users[username][0] = None
+    current_users[username][1] = 0
+    return jsonify(True)
+
+@socketio.on('leaverequest')
+@login_required
+def on_leave_request():
+    username = session["username"]
+    current_users[username][0] = None
+    current_users[username][1] = 0
+
+@socketio.on('lobbyrequest')
+@login_required
+def on_lobby_request(lobby):
+    username = session["username"]
+    join_room(lobby)
+    current_users[username] = [lobby, 0, True]
+
+@socketio.on('joinrequest')
+@login_required
+def on_join_request():
+    print(current_users)
+    username = session["username"]
+    lobby = current_users[username][0]
+    if lobby != None:
+        join_room(lobby)
+     
+@socketio.on('startgame')
+@login_required
+def game_start():
+    username = session["username"]
+    room = current_users[username][0]
+    lobby_players = [k for k,v in current_users.items() if v[0] == room]
+    print(lobby_players)
+
+    for host in lobby_players:
+        triv = trivdb.execute("SELECT question, correct, incorrect FROM trivia_a ORDER BY RANDOM() LIMIT 1")
+        correct = triv[0]['correct']
+        question = triv[0]["question"]
+        inc = triv[0]["incorrect"]
+        answers = inc.split("'")
+        answers.append(correct)
+        random.shuffle(answers)
+
+        current_hosts[room] = host
+        correct_answers[room] = correct
+
+        hostdata = question + " answer: " + correct
+
+        emit('fase1', (host, hostdata), broadcast=True, room=room)
+        time.sleep(10)
+
+        emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
+        time.sleep(10)
+
+    emit('endfase', broadcast=True)
+    for player in lobby_players:
+        print(player + ": " + str(current_users[player][1]))
+        current_users[player][1] = 0
+    time.sleep(10)
+
+@socketio.on('answer')
+@login_required
+def on_answer(answer):
+    username = session["username"]
+    lobby = current_users[username][0]
+    if correct_answers[lobby] == answer:
+        current_users[username][1] += 3
+        host = current_hosts[lobby]
+        current_users[host][1] += 1
+
+@socketio.on('picture')
+def handle_user_picture(message):
+    emit('picture', message, broadcast=True)
+
+
+@socketio.on('chat message')
+@login_required
+def handle_user_chat(message):
+    username = session["username"]
+    message = username + ": " + message
+    room = current_users[username][0]
+    emit('user message', message, broadcast=True, room=room)
+
+@app.route("/getusername", methods=["GET"])
+@login_required
+def username():
+    return session["username"]
+
+@app.route("/", methods=["GET"])
+@login_required
+def index():
+    return render_template("index.html")
+
+@app.route("/game", methods=["GET"])
+@login_required
+def game():
+    return render_template("game.html")
+
+
+@app.route("/check", methods=["GET"])
+def check():
+    # retrieving username
+    username = request.args.get("name")
+    # retrieving existing usernames
+    answer = db.execute("SELECT * FROM users WHERE username = :username", username = username)
+    # checking for valid name
+    if (len(answer) > 0):
+        data = False
+    else:
+        data = True
+    return jsonify(data)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Log user in"""
+
+    # Forget any user_id
+    session.clear()
+
+    # User reached route via POST (as by submitting a form via POST)
+    if request.method == "POST":
+
+        # Ensure username was submitted
+        if not request.form.get("username"):
+            return apology("must provide username", 400)
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            return apology("must provide password", 400)
+
+        # Query database for username
+        rows = db.execute("SELECT * FROM users WHERE username = :username",
+                          username=request.form.get("username"))
+
+        # Ensure username exists and password is correct
+        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+            return apology("invalid username and/or password", 400)
+
+        # Remember which user has logged in
+        session["user_id"] = rows[0]["id"]
+        session["username"] = rows[0]["username"]
+
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    else:
+        return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    """Log user out"""
+
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to login form
+    return redirect("/")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    # User reached route via POST (as by submitting a form via POST)
+    if request.method == "POST":
+        # Ensure username was submitted
+        if not request.form.get("username"):
+            return apology("must provide username", 403)
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            return apology("must provide password", 403)
+
+        # Query: insert values in database
+        if(request.form.get("password") == request.form.get("confirmation")):
+            db.execute("INSERT INTO users (username, hash) VALUES (:username, :password)", username = request.form.get("username"), password=generate_password_hash(request.form.get("password")))
+        else:
+            return apology("Passwords are not the same", 403)
+        # Query database for username
+
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    else:
+        return render_template("register.html")
+
+
+
+def errorhandler(e):
+    """Handle error"""
+    if not isinstance(e, HTTPException):
+        e = InternalServerError()
+    return apology(e.name, e.code)
+
+
+# Listen for errors
+for code in default_exceptions:
+    app.errorhandler(code)(errorhandler)
+
+if __name__ == '__main__':
+    socketio.run(app, host='localhost', port=3000)

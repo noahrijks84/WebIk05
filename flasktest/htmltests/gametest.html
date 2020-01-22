@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block headscript %}
+{% endblock %}
+
+{% block title %}
+    Portofolio
+{% endblock %}
+
+{% block main %}
+    <div id="gameinfo">
+        <h2>Lobby Page</h2>
+    </div>
+    <div id="wrapper">
+        <div id="drawing">
+            <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+            <div align="center">
+                <canvas id="myCanvas" width= 1000px height= 600px></canvas>
+                <br /><br />
+                <button class="canvasoption" onclick="javascript:clearArea();return false;">Clear Area</button>
+                <!--<button id="publishbtn" class="canvasoption"> Publish </button>-->
+
+        </div>
+    </div>
+    <div id="qanda">
+        <h2>Question area</h2>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+    var socket = io();
+
+    $('form').submit(function(e){
+        e.preventDefault(); // prevents page reloading
+        socket.emit('chat message', $('#chatbox').val());
+        $('#chatbox').val('');
+        return false;
+    });
+
+    // document.getElementById("publishbtn").addEventListener("click", function(){
+    //     var canvas = document.getElementById('myCanvas');
+    //     var pic = canvas.toDataURL();
+    //     socket.emit('picture', pic)
+    // });
+
+    socket.on('user message', function(message){
+        $('#messages').prepend($('<li>').text(message));
+    });
+
+    socket.on('picture', function(message){
+        var myCanvas = document.getElementById('myCanvas');
+        var ctx = myCanvas.getContext('2d');
+        var img = new Image;
+        img.onload = function(){
+            ctx.drawImage(img,0,0);
+        };
+        img.src = message;
+    });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <script>
+        $(document).on("focusout","#username",function(){
+            var username = document.getElementById('username').value
+            $.get( "/check", { name: username})
+            .done(function( data ) {
+                if (data == false){
+                    document.getElementById('feedback').innerHTML = "Username already in use"
+                    return 400, False
+                }
+                else{
+                    document.getElementById("butn").disabled = false;
+                }
+        });
+    })
+    </script>
+    <form action="/register" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" id="username" name="username" placeholder="Username" type="text">
+            <p id="feedback"></p>
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="password" placeholder="Password" type="password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="confirmation" placeholder="Password" type="password">
+        </div>
+        <button class="btn btn-primary" id="butn" type="submit" disabled>Log In</button>
+    </form>
+{% endblock %}

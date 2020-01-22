@@ -1,0 +1,165 @@
+nav .navbar-brand
+{
+    /* size for brand */
+    font-size: xx-large;
+}
+
+/* colors for brand */
+nav .navbar-brand .blue
+{
+    color: #537fbe;
+}
+nav .navbar-brand .red
+{
+    color: #ea433b;
+}
+nav .navbar-brand .yellow
+{
+    color: #f5b82e;
+}
+nav .navbar-brand .green
+{
+    color: #2e944b;
+}
+
+main .form-control
+{
+    /* center form controls */
+    display: inline-block;
+
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+}
+
+main
+{
+    /* scroll horizontally as needed */
+    overflow-x: auto;
+
+    /* center contents */
+    text-align: center;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
+th,td{
+    width: 20%;
+}
+thead{
+    border: 1px solid grey;
+}
+
+@media (min-width: 768px){
+  .container{
+    max-width:100%;
+  }
+}
+
+@media (min-width: 992px){
+  .container{
+    max-width:100%;
+  }
+}
+
+#feedback{
+    color: #ff0000;
+}
+
+#dropdown-stocks{
+    margin: 0 0 50px 0;
+}
+
+#wrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
+#drawing {
+    width: 70%;
+    height: 70vh;
+    float:left;
+    background-color: #016FB9;
+    overflow-y: scroll;
+}
+
+#chat {
+    height: 70vh;
+    overflow-y: scroll;
+}
+
+#chatbox{
+    width: 80%;
+}
+
+#chatbutton{
+    width: 20%;
+}
+
+#messages{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#messages li{
+    padding: 10px 10px;
+    overflow: hidden;
+}
+
+#messages li:nth-child(odd){
+    background: #eee;
+}
+
+#qanda {
+    width: 100%;
+    height: 50px;
+    background-color: #EE6352;
+}
+
+#gameinfo {
+    width: 100%;
+    height: 50px;
+    background-color: #EE6352;
+}
+
+h2{
+    color: white;
+}
+
+.canvasoption{
+    margin: 0 25px 0 0;
+    background-color: white;
+    border: none;
+    color: black;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+
+#indexheader {
+    width: 100%;
+    height: 50px;
+    background-color: #EE6352;
+}
+
+#customgame {
+    width: 70%;
+    height: 70vh;
+    float:left;
+    background-color: #016FB9;
+    overflow-y: scroll;
+}
+
+#opengame {
+    height: 70vh;
+    overflow-y: scroll;
+}
+
+
+
+

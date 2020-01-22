@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block headscript %}
+{% endblock %}
+
+{% block title %}
+    Portofolio
+{% endblock %}
+
+{% block main %}
+    <div id="indexheader">
+        <h2>Index</h2>
+    </div>
+    <div id="wrapper">
+
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+    var socket = io();
+
+    socket.emit('joinrequest');
+
+    // $('#lobbyform').submit(function(e){
+    //     console.log("test")
+    //     e.preventDefault(); // prevents page reloading
+    //     socket.emit('lobbyrequest', $('#lobbybox').val());
+    //     $('#lobbybox').val('');
+
+        $.ajax({
+        	type : "GET",
+        	url : '/game',
+        	success: function (data) {
+        		window.location.href = "game"
+        		}
+	    });
+
+    //     return false;
+    // });
+
+    </script>
+{% endblock %}
