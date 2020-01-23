@@ -6,31 +6,42 @@
 
 {% block main %}
     <script>
-        $(document).on("focusout","#username",function(){
-            var username = document.getElementById('username').value
+        function changeUsername() {
+            const username = $('#username').val()
+
+            $("#butn").prop("disabled", true);
+
             $.get( "/check", { name: username})
             .done(function( data ) {
-                if (data == false){
-                    document.getElementById('feedback').innerHTML = "Username already in use"
-                    return 400, False
+                if (!data){
+                    $('#username-feedback').text("Username already in use");
                 }
                 else{
-                    document.getElementById("butn").disabled = false;
+                    $("#butn").prop("disabled", false);
+                    $('#username-feedback').text("");
                 }
-        });
-    })
+            });
+        }
+        function checkPattern() {
+            const password = $("#password").val()
+            const passwordConfirm = $("#password-confirm").val()
+
+            console.log(password.match(/^(?=.[A-Z])(?=.\d)[A-Za-z\d]{8,}$/g));
+        }
     </script>
     <form action="/register" method="post">
         <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" id="username" name="username" placeholder="Username" type="text">
-            <p id="feedback"></p>
+            <input oninput="changeUsername()" autocomplete="off" autofocus class="form-control" id="username" name="username" placeholder="Username" type="text">
+            <p id="username-feedback"></p>
         </div>
         <div class="form-group">
-            <input class="form-control" name="password" placeholder="Password" type="password">
+            <input id="password" oninput="checkPattern()" class="form-control" type="password" name="password" placeholder="Password">
+            <p id="password-feedback"></p>
         </div>
         <div class="form-group">
-            <input class="form-control" name="confirmation" placeholder="Password" type="password">
+            <input id="password-confirm" oninput="checkPattern()" class="form-control" type="password" name="password" placeholder="Password">
+            <p id="password-confirm-feedback"></p>
         </div>
-        <button class="btn btn-primary" id="butn" type="submit" disabled>Log In</button>
+        <button class="btn btn-primary" id="butn" type="submit" disabled>Register</button>
     </form>
 {% endblock %}
