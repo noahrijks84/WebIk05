@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Leaderboards
+{% endblock %}
+
+{% block main %}
+
+<table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Total Points</th>
+                <th>Animals</th>
+                <th>Video Games</th>
+                <th>Celebrities</th>
+                <th>Comics</th>
+                <th>General Knowledge</th>
+            </tr>
+        </thead>
+        <tbody>
+                {% for player in total_points %}
+                <tr>
+                    <td>{{ player["username"] }}</td>
+                    <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
+                    <td>{{ player["animals"] }}</td>
+                    <td>{{ player["video_games"] }}</td>
+                    <td>{{ player["celebrities"] }}</td>
+                    <td>{{ player["comics"] }}</td>
+                    <td>{{ player["general_knowledge"] }}</td>
+                </tr>
+                {% endfor %}
+        </tbody>
+
+{% endblock %}

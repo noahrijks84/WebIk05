@@ -25,6 +25,7 @@ def after_request(response):
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///finance.db")
 trivdb = SQL("sqlite:///trivdb.db")
+scrivdb = SQL("sqlite:///scrivia.db")
 
 current_users = {}
 correct_answers = {}
@@ -60,7 +61,7 @@ def on_join_request():
     lobby = current_users[username][0]
     if lobby != None:
         join_room(lobby)
-     
+
 @socketio.on('startgame')
 @login_required
 def game_start():
@@ -195,6 +196,27 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
+
+
+@app.route("/leaderboards", methods=["GET", "POST"])
+@login_required
+def leaderboards():
+    # list of the categories to send to HTML
+    categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
+
+    # show the the sum of the points of all the categories
+    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
+
+    # show the points per category
+    animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
+    video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
+    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
+    comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
+    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
+
+    return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
+    celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
+
 
 
 @app.route("/register", methods=["GET", "POST"])
