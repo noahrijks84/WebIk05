@@ -8,6 +8,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required, lookup, usd
+import json
 
 # Configure application
 app = Flask(__name__)
@@ -71,6 +72,26 @@ def on_join_request():
     else:
         return redirect("/")
 
+
+def get_questions(amount, category):
+    import requests
+    url = 'https://opentdb.com/api.php'
+    parameters = {'amount': amount, 'type': 'multiple', 'category': category, 'difficulty' : 'easy'}
+    response = requests.get(url, params=parameters)
+    response.raise_for_status()
+    json_response = response.json()['results']
+    return json_response
+    
+
+def call_question_gk():
+    question = get_questions(1, 27)[0]
+    intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
+    print(intlist)
+    if len(intlist) >= 1:
+        return call_question_gk()
+    else:
+        return question
+
 @socketio.on('startgame')
 @login_required
 def game_start():
@@ -80,11 +101,10 @@ def game_start():
     print(lobby_players)
 
     for host in lobby_players:
-        triv = trivdb.execute("SELECT question, correct, incorrect FROM trivia_a ORDER BY RANDOM() LIMIT 1")
-        correct = triv[0]['correct']
-        question = triv[0]["question"]
-        inc = triv[0]["incorrect"]
-        answers = inc.split("'")
+        triv = call_question_gk()
+        correct = triv['correct_answer']
+        question = triv["question"]
+        answers = triv["incorrect_answer"]
         answers.append(correct)
         random.shuffle(answers)
 
