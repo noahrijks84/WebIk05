@@ -120,6 +120,7 @@ def game_start():
         hostdata = question + " answer: " + correct
 
         pointsdata = current_users[username][1]
+        print('pointsdata = ', pointsdata)
 
         emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
         time.sleep(10)
