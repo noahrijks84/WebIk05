@@ -86,7 +86,6 @@ def get_questions(amount, category):
 def call_question(cate):
     question = get_questions(1, cate)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
-    print(intlist)
     if len(intlist) >= 1:
         return call_question(cate)
     else:
@@ -101,7 +100,13 @@ def game_start():
     print(lobby_players)
 
     for host in lobby_players:
-        category = '27'
+        catlook = current_users[username][2]
+        print("CATEGORY =", catlook)
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+                            '27', '15', '26', '29', '9']
+        for cat in range(int(len(category_list) / 2.0)):
+            if category_list[cat] == catlook:
+                category = category_list[cat + 5]
         triv = call_question(category)
         correct = triv['correct_answer']
         question = triv["question"]
