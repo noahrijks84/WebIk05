@@ -119,7 +119,9 @@ def game_start():
 
         hostdata = question + " answer: " + correct
 
-        emit('fase1', (host, hostdata), broadcast=True, room=room)
+        pointsdata = current_users[username][1]
+
+        emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
         time.sleep(10)
 
         emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
@@ -165,8 +167,6 @@ def on_registerpoints():
 
     return jsonify(True)
     
-
-
 @socketio.on('answer')
 @login_required
 def on_answer(answer):

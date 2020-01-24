@@ -10,6 +10,8 @@
 {% block main %}
     <div id="gameinfo">
         <p id="question"></p>
+        <!-- is een begin om de punten te laten zien, check regel 103 in game.html en regel 122 in application.py -->
+        <p id="pointsdata"></p>
     </div>
     <div id="wrapper">
         <div id="drawing">
@@ -96,6 +98,9 @@
         document.getElementById("myButton2").style.display = "none";
         document.getElementById("myButton3").style.display = "none";
         document.getElementById("myButton4").style.display = "none";
+        
+        // dit is een basis om de punten te laten zien
+        document.getElementById("pointsdata").innerHTML = (pointsdata);
 
         if (host != username) {
             $("#canvas1").drawr("stop");
