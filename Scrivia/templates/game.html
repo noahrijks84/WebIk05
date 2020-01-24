@@ -9,9 +9,7 @@
 
 {% block main %}
     <div id="gameinfo">
-        <p id="question"></p>
-        <!-- is een begin om de punten te laten zien, check regel 103 in game.html en regel 122 in application.py -->
-        <p id="pointsdata"></p>
+        <p id="question"></p>        
     </div>
     <div id="wrapper">
         <div id="drawing">
@@ -51,6 +49,7 @@
         <div id="gamearea">
             <button class="buttonsquare" id="startbutton">Start Game!</button>
             <p id="answers"></p>
+            <p id="pointsdata"></p>
             <input type="button" value="" id="myButton1" class="buttongeneral"></input> 
             <input type="button" value="" id="myButton2" class="buttongeneral"></input> 
             <input type="button" value="" id="myButton3" class="buttongeneral"></input> 
@@ -85,7 +84,7 @@
     document.getElementById("myButton3").style.display = "none";
     document.getElementById("myButton4").style.display = "none";
 
-    socket.on('fase1', function(host, hostdata){
+    socket.on('fase1', function(host, hostdata, pointsdata){
         
         ctx.clearRect(0, 0, 2000, 2000);
 
@@ -99,9 +98,7 @@
         document.getElementById("myButton3").style.display = "none";
         document.getElementById("myButton4").style.display = "none";
         
-        // dit is een basis om de punten te laten zien
-        console.log(pointsdata)
-        document.getElementById("pointsdata").innerHTML = (pointsdata);
+        document.getElementById("pointsdata").innerHTML = ("you have " + pointsdata + " points");
 
         if (host != username) {
             $("#canvas1").drawr("stop");
