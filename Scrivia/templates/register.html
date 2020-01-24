@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form action="/register" method="post" id="registration">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text" id="usernameID">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="password" placeholder="Password" type="password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="confirmation" placeholder="Password (again)" type="password">
+        </div>
+        <button class="btn btn-primary buttongeneral" type="button" id="button1">Register</button>
+    </form>
+    
+    <script>
+    // Stop the button from working until the query is finished
+    document.getElementById("button1").addEventListener("click", function(event) {
+    event.preventDefault();
+    let input = document.querySelector("#usernameID").value;
+
+    // Get the username using GET and run it through /check
+    $.get("/check?username=" + input, function(data)
+    {
+        // If it's true, submit the form
+        if (data == true)
+        {
+            document.getElementById("registration").submit();
+        }
+
+        // If false, show user alert and prevent submission
+        else
+        {
+            alert("username is taken, choose another");
+        }
+    });
+    });
+    </script>
+{% endblock %}

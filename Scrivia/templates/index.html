@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block headscript %}
+{% endblock %}
+
+{% block title %}
+    Portofolio
+{% endblock %}
+
+{% block main %}
+    <div id="indexheader">
+        <h2></h2>
+    </div>
+    <div id="wrapper">
+        <div id="customgame">
+            <h2>Create a lobby</h2>
+            <p>Choose lobby name</p>
+            <p>If no lobby exists, one will be created</p>
+            <p>If a lobby does exist, you will join it</p>
+            <form id="lobbyform" action="">
+                <input id="lobbybox" autocomplete="off"/><button class="buttonsquare" id="chatbutton">Join Lobby!</button>
+            </form>
+        </div>
+        <div id="opengame">
+            <h2>Pick a lobby</h2> 
+            <ul id="opengames"></ul>
+        </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+    var socket = io();
+
+    socket.emit('leaverequest');
+
+    $('#lobbyform').submit(function(e){
+        console.log("test")
+        e.preventDefault(); 
+        socket.emit('lobbyrequest', $('#lobbybox').val());
+        $('#lobbybox').val('');
+
+        $.ajax({
+        	type : "GET",
+        	url : '/game',
+        	success: function (data) {
+        		window.location.href = "game"
+        		}
+	    });
+    });
+
+    </script>
+{% endblock %}

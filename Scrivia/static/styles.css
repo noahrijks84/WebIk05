@@ -1,0 +1,240 @@
+nav .navbar-brand
+{
+    /* size for brand */
+    font-size: xx-large;
+}
+
+/* colors for brand */
+nav .navbar-brand .blue
+{
+    color: #537fbe;
+}
+nav .navbar-brand .red
+{
+    color: #ea433b;
+}
+nav .navbar-brand .yellow
+{
+    color: #f5b82e;
+}
+nav .navbar-brand .green
+{
+    color: #2e944b;
+}
+
+main .form-control
+{
+    /* center form controls */
+    display: inline-block;
+
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+}
+
+main
+{
+    /* scroll horizontally as needed */
+    overflow-x: auto;
+
+    /* center contents */
+    text-align: center;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
+th,td{
+    width: 10%;
+}
+thead{
+    border: 1px solid grey;
+}
+
+#feedback{
+    color: #ff0000;
+}
+
+#dropdown-stocks{
+    margin: 0 0 50px 0;
+}
+
+/* General layout */
+body{
+    background-color: #2c0e37;
+}
+
+#wrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
+h2{
+    color: black;
+}
+
+p{
+    color: black;
+}
+
+.navbar{
+    background-color: #690375;
+}
+
+.container{
+    background-color: #2c0e37;
+}
+
+a{
+    color: white;
+}
+
+
+@media (min-width: 768px){
+    .container{
+      max-width:100%;
+    }
+}
+  
+@media (min-width: 992px){
+    .container{
+      max-width:100%;
+    }
+}
+
+.buttonsquare {
+    background-color: #FAA916;
+    color: white;
+    border: 2px solid #FAA916;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+}
+  
+.buttonsquare:hover {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #FAA916;
+}
+
+.buttongeneral {
+    background-color: #FAA916;
+    color: white;
+    border: 2px solid #FAA916;
+    border-radius: 10px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+}
+  
+.buttongeneral:hover {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #FAA916;
+}
+
+/* Game page */
+#drawing {
+    width: 70%;
+    height: 70vh;
+    float:left;
+    background-color: grey;
+    overflow-y: auto;
+}
+
+#chat {
+    height: 40vh;
+    overflow-y: auto;
+    border-style: solid;
+    background-color: white;
+}
+
+#gamearea {
+    height: 30vh;
+    overflow-y: auto;
+    background-color: white;
+    border-style: solid;
+}
+
+#chatbox{
+    width: 80%;
+}
+
+#chatbutton{
+    width: 20%;
+}
+
+#messages{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#messages li{
+    padding: 10px 10px;
+    overflow: hidden;
+}
+
+#messages li:nth-child(odd){
+    background: #eee;
+}
+
+#gameinfo {
+    width: 100%;
+    height: 50px;
+    background-color: #FAA916;
+}
+
+#canvas1{
+    border: none;
+    background-color: white;
+}
+
+.canvasoption{
+    margin: 0 25px 0 0;
+    background-color: white;
+    border: none;
+    color: black;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+
+#startbutton{
+    width: 100%;
+}
+
+/* index page */
+#indexheader {
+    width: 100%;
+    height: 50px;
+    background-color: #FAA916;
+}
+
+#customgame {
+    width: 70%;
+    height: 70vh;
+    float:left;
+    background-color: #FBFFFE;
+    overflow-y: auto;
+    border-style: solid;
+    border-color: #2c0e37;
+}
+
+#opengame {
+    height: 70vh;
+    overflow-y: auto;
+    background-color: #FBFFFE;
+    border-style: solid;
+    border-color: #2c0e37;
+}
+
+/* Leaderboard page */
+th, td{
+    color: white;
+}
+
+
+
+

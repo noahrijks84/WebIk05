@@ -1,0 +1,223 @@
+{% extends "layout.html" %}
+
+{% block headscript %}
+{% endblock %}
+
+{% block title %}
+    Portofolio
+{% endblock %}
+
+{% block main %}
+    <div id="gameinfo">
+        <p id="question"></p>
+    </div>
+    <div id="wrapper">
+        <div id="drawing">
+            <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/3.6.95/css/materialdesignicons.css" rel="stylesheet">
+            <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+                integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh"
+                crossorigin="anonymous">
+            </script>
+            <script src="/static/jquery.drawr.combined.js"></script>
+
+		    <canvas id="canvas1"></canvas>
+
+	        <script>
+            	//Turn a canvas element into a sketch area
+            	$("#canvas1").drawr({
+            		"enable_tranparency" : true,
+            	    "canvas_width" : 1400,
+            	    "canvas_height" : 800,
+            	    "clear_on_init" : true
+            	});
+
+                //Enable drawing mode, show controls
+            	$("#canvas1").drawr("start");
+
+            	function destroy(){
+            		$("#canvas1").drawr("destroy");
+            	}
+            </script>
+        </div>
+        <div id="chat">
+            <form id="chatform" action="">
+                <input id="chatbox" autocomplete="off" /><button class="buttonsquare" id="chatbutton">Send</button>
+            </form>
+            <ul id="messages"></ul>
+        </div>
+        <div id="gamearea">
+            <button class="buttonsquare" id="startbutton">Start Game!</button>
+            <p id="answers"></p>
+            <input type="button" value="" id="myButton1" class="buttongeneral"></input> 
+            <input type="button" value="" id="myButton2" class="buttongeneral"></input> 
+            <input type="button" value="" id="myButton3" class="buttongeneral"></input> 
+            <input type="button" value="" id="myButton4" class="buttongeneral"></input>
+        </div>
+    </div>
+
+    <script language="JavaScript">
+    </script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+    
+    var socket = io();
+
+    window.onbeforeunload = function(event)
+    {
+        $.get('/leaverequest')
+    };
+
+    var myCanvas = document.getElementById('canvas1');
+    var ctx = myCanvas.getContext('2d');
+
+    $.get("/getusername", function(data){
+        username = data;
+    })
+
+    socket.emit('joinrequest');
+
+    document.getElementById("myButton1").style.display = "none";
+    document.getElementById("myButton2").style.display = "none";
+    document.getElementById("myButton3").style.display = "none";
+    document.getElementById("myButton4").style.display = "none";
+
+    socket.on('fase1', function(host, hostdata){
+        
+        ctx.clearRect(0, 0, 2000, 2000);
+
+        document.getElementById("myButton1").value=("");
+        document.getElementById("myButton2").value=("");
+        document.getElementById("myButton3").value=("");
+        document.getElementById("myButton4").value=("");
+
+        document.getElementById("myButton1").style.display = "none";
+        document.getElementById("myButton2").style.display = "none";
+        document.getElementById("myButton3").style.display = "none";
+        document.getElementById("myButton4").style.display = "none";
+
+        if (host != username) {
+            $("#canvas1").drawr("stop");
+            document.getElementById("answers").innerHTML = ("");
+            document.getElementById("question").innerHTML = ('Somebody else is drawing right now');
+        }
+        else{
+            $("#canvas1").drawr("start");
+            document.getElementById("answers").innerHTML = ("");
+            document.getElementById("question").innerHTML = (hostdata);
+        }
+    });
+
+    socket.on('fase2', function(host, answers, question, correct){
+        $("#canvas1").drawr("stop");
+
+        document.getElementById("myButton1").value=(answers[0]);
+        document.getElementById("myButton2").value=(answers[1]);
+        document.getElementById("myButton3").value=(answers[2]);
+        document.getElementById("myButton4").value=(answers[3]);
+
+        document.getElementById("answers").innerHTML = ("");
+
+        if (host != username) {
+            document.getElementById("question").innerHTML = (question);
+            
+            document.getElementById("myButton1").style.display = "inline";
+            document.getElementById("myButton2").style.display = "inline";
+            document.getElementById("myButton3").style.display = "inline";
+            document.getElementById("myButton4").style.display = "inline";
+        }
+        else{
+            let canvas = document.getElementById('canvas1');
+            let pic = canvas.toDataURL();
+            socket.emit('picture', pic);
+            
+            document.getElementById("answers").innerHTML = (answers);
+            document.getElementById("question").innerHTML = ("The others are picking their answers now");
+        }
+    });
+
+    socket.on('endfase', function(){
+        document.getElementById("startbutton").disabled = false;
+
+        $("#canvas1").drawr("stop");
+        
+        ctx.clearRect(0, 0, 2000, 2000);
+
+        document.getElementById("myButton1").value=("");
+        document.getElementById("myButton2").value=("");
+        document.getElementById("myButton3").value=("");
+        document.getElementById("myButton4").value=("");
+
+        document.getElementById("myButton1").style.display = "none";
+        document.getElementById("myButton2").style.display = "none";
+        document.getElementById("myButton3").style.display = "none";
+        document.getElementById("myButton4").style.display = "none";
+
+        document.getElementById("question").innerHTML = ("The game has ended");
+        document.getElementById("answers").innerHTML = ("");
+    });
+
+    socket.on('picture', function(message){
+        var img = new Image;
+        img.onload = function(){
+            ctx.drawImage(img,0,0);
+        };
+        img.src = message;
+    });
+
+    $('form').submit(function(e){
+        e.preventDefault();
+        socket.emit('chat message', $('#chatbox').val());
+        $('#chatbox').val('');
+        return false;
+    });
+
+    document.getElementById("startbutton").addEventListener("click", function(){
+        socket.emit('startgame');
+        document.getElementById("startbutton").disabled = true;
+    });
+
+    socket.on('user message', function(message){
+        $('#messages').prepend($('<li>').text(message));
+    });
+
+    document.getElementById("myButton1").addEventListener("click", function(){
+        let answer = document.getElementById("myButton1").value
+        socket.emit('answer', answer);
+
+        document.getElementById("myButton1").style.display = "none";
+        document.getElementById("myButton2").style.display = "none";
+        document.getElementById("myButton3").style.display = "none";
+        document.getElementById("myButton4").style.display = "none";
+    });
+    document.getElementById("myButton2").addEventListener("click", function(){
+        let answer = document.getElementById("myButton2").value
+        socket.emit('answer', answer);
+
+        document.getElementById("myButton1").style.display = "none";
+        document.getElementById("myButton2").style.display = "none";
+        document.getElementById("myButton3").style.display = "none";
+        document.getElementById("myButton4").style.display = "none";
+    });
+    document.getElementById("myButton3").addEventListener("click", function(){
+        let answer = document.getElementById("myButton3").value
+        socket.emit('answer', answer);
+
+        document.getElementById("myButton1").style.display = "none";
+        document.getElementById("myButton2").style.display = "none";
+        document.getElementById("myButton3").style.display = "none";
+        document.getElementById("myButton4").style.display = "none";
+    });
+    document.getElementById("myButton4").addEventListener("click", function(){
+        let answer = document.getElementById("myButton4").value
+        socket.emit('answer', answer);
+        
+        document.getElementById("myButton1").style.display = "none";
+        document.getElementById("myButton2").style.display = "none";
+        document.getElementById("myButton3").style.display = "none";
+        document.getElementById("myButton4").style.display = "none";
+    });
+
+    </script>
+{% endblock %}
