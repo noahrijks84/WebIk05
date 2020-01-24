@@ -1,35 +1,180 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Leaderboards
+Leaderboards
 {% endblock %}
 
 {% block main %}
+<script type="text/javascript">
+    window.onload = function () {
+        document.getElementById("animals").style.display = "none";
+        document.getElementById("video_games").style.display = "none";
+        document.getElementById("comics").style.display = "none";
+        document.getElementById("celebrities").style.display = "none";
+        document.getElementById("general_knowledge").style.display = "none";
+    }
 
-<table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Total Points</th>
-                <th>Animals</th>
-                <th>Video Games</th>
-                <th>Celebrities</th>
-                <th>Comics</th>
-                <th>General Knowledge</th>
-            </tr>
-        </thead>
-        <tbody>
-                {% for player in total_points %}
-                <tr>
-                    <td>{{ player["username"] }}</td>
-                    <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
-                    <td>{{ player["animals"] }}</td>
-                    <td>{{ player["video_games"] }}</td>
-                    <td>{{ player["celebrities"] }}</td>
-                    <td>{{ player["comics"] }}</td>
-                    <td>{{ player["general_knowledge"] }}</td>
-                </tr>
-                {% endfor %}
-        </tbody>
+    function onCategorySelect() {
+        var category = document.getElementById("categories").value;
+        if (category == "animals") {
+            document.getElementById("animals").style.display = "";
+            document.getElementById("video_games").style.display = "none";
+            document.getElementById("comics").style.display = "none";
+            document.getElementById("celebrities").style.display = "none";
+            document.getElementById("general_knowledge").style.display = "none";
+            document.getElementById("combined").style.display = "none";
+        }
+        else if (category == "video_games") {
+            document.getElementById("animals").style.display = "none";
+            document.getElementById("video_games").style.display = "";
+            document.getElementById("comics").style.display = "none";
+            document.getElementById("celebrities").style.display = "none";
+            document.getElementById("general_knowledge").style.display = "none";
+            document.getElementById("combined").style.display = "none";
+        }
+        else if (category == "comics") {
+            document.getElementById("animals").style.display = "none";
+            document.getElementById("video_games").style.display = "none";
+            document.getElementById("comics").style.display = "";
+            document.getElementById("celebrities").style.display = "none";
+            document.getElementById("general_knowledge").style.display = "none";
+            document.getElementById("combined").style.display = "none";
+        }
+        else if (category == "celebrities") {
+            document.getElementById("animals").style.display = "none";
+            document.getElementById("video_games").style.display = "none";
+            document.getElementById("comics").style.display = "none";
+            document.getElementById("celebrities").style.display = "";
+            document.getElementById("general_knowledge").style.display = "none";
+            document.getElementById("combined").style.display = "none";
+        }
+        else if (category == "general_knowledge") {
+            document.getElementById("animals").style.display = "none";
+            document.getElementById("video_games").style.display = "none";
+            document.getElementById("comics").style.display = "none";
+            document.getElementById("celebrities").style.display = "none";
+            document.getElementById("general_knowledge").style.display = "";
+            document.getElementById("combined").style.display = "none";
+        }
+        else {
+            document.getElementById("animals").style.display = "none";
+            document.getElementById("video_games").style.display = "none";
+            document.getElementById("comics").style.display = "none";
+            document.getElementById("celebrities").style.display = "none";
+            document.getElementById("general_knowledge").style.display = "none";
+            document.getElementById("combined").style.display = "";
+        }
+    }
+</script>
 
-{% endblock %}
+<form action="/leaderboards" method="post">
+    <select id="categories" onchange='onCategorySelect()'>
+        <option disabled selected value>Category</option>
+        <option value="combined">Total Points</option>
+        <option value="animals">Animals</option>
+        <option value="video_games">Video Games</option>
+        <option value="celebrities">Celebrities</option>
+        <option value="comics">Comics</option>
+        <option value="general_knowledge">General Knowledge</option> -->
+    </select>
+
+    <body>
+        <form id="form1">
+            <table id="combined" align="center">
+                <thead>
+                    <th>Username</th>
+                    <th>Total Points</th>
+                    <th>Animals</th>
+                    <th>Video Games</th>
+                    <th>Celebrities</th>
+                    <th>Comics</th>
+                    <th>General Knowledge</th>
+                </thead>
+                <tbody>
+                    {% for player in total_points %}
+                    <tr>
+                        <td>{{ player["username"] }}</td>
+                        <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
+                        <td>{{ player["animals"] }}</td>
+                        <td>{{ player["video_games"] }}</td>
+                        <td>{{ player["celebrities"] }}</td>
+                        <td>{{ player["comics"] }}</td>
+                        <td>{{ player["general_knowledge"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <table id="animals" align="center">
+                <thead>
+                    <th>Username</th>
+                    <th>Points</th>
+                </thead>
+                <tbody>
+                    {% for player in animals_points %}
+                    <tr>
+                        <td>{{ player["username"] }}</td>
+                        <td>{{ player["animals"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <table id="video_games" align="center">
+                <thead>
+                    <th>Username</th>
+                    <th>Points</th>
+                </thead>
+                <tbody>
+                    {% for player in video_games_points %}
+                    <tr>
+                        <td>{{ player["username"] }}</td>
+                        <td>{{ player["video_games"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <table id="celebrities" align="center">
+                <thead>
+                    <th>Username</th>
+                    <th>Points</th>
+                </thead>
+                <tbody>
+                    {% for player in celebrities_points %}
+                    <tr>
+                        <td>{{ player["username"] }}</td>
+                        <td>{{ player["celebrities"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <table id="comics" align="center">
+                <thead>
+                    <th>Username</th>
+                    <th>Points</th>
+                </thead>
+                <tbody>
+                    {% for player in comics_points %}
+                    <tr>
+                        <td>{{ player["username"] }}</td>
+                        <td>{{ player["comics"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <table id="general_knowledge" align="center">
+                <thead>
+                    <th>Username</th>
+                    <th>Points</th>
+                </thead>
+                <tbody>
+                    {% for player in general_knowledge_points %}
+                    <tr>
+                        <td>{{ player["username"] }}</td>
+                        <td>{{ player["general_knowledge"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+    </body>
+
+    {% endblock %}
