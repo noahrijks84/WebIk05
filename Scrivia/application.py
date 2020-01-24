@@ -83,12 +83,12 @@ def get_questions(amount, category):
     return json_response
     
 
-def call_question_gk():
-    question = get_questions(1, 27)[0]
+def call_question(cate):
+    question = get_questions(1, cate)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
     print(intlist)
     if len(intlist) >= 1:
-        return call_question_gk()
+        return call_question(cate)
     else:
         return question
 
@@ -101,10 +101,11 @@ def game_start():
     print(lobby_players)
 
     for host in lobby_players:
-        triv = call_question_gk()
+        category = '27'
+        triv = call_question(category)
         correct = triv['correct_answer']
         question = triv["question"]
-        answers = triv["incorrect_answer"]
+        answers = triv["incorrect_answers"]
         answers.append(correct)
         random.shuffle(answers)
 

@@ -4,7 +4,7 @@ import random
 #de trivdb die ik in deze branch heb gezet staan alle trivia vragen in, deze ook downloaden als je vragen wilt toevoegen
 db = SQL("sqlite:///trivdb.db")
 
-vgq = #hier komt een dict die we gelijk in sql kunnen zetten
+vgq = [] # hier komt een dict die we gelijk in sql kunnen zetten
 
 #zet de vragen in sql
 for x in range(len(vgq)):
