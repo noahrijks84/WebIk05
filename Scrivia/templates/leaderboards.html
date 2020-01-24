@@ -81,7 +81,7 @@ Leaderboards
     <body>
         <form id="form1">
             <table id="combined" align="center">
-                <thead>
+                <thead align="left">
                     <th>Username</th>
                     <th>Total Points</th>
                     <th>Animals</th>
@@ -92,7 +92,7 @@ Leaderboards
                 </thead>
                 <tbody>
                     {% for player in total_points %}
-                    <tr>
+                    <tr align="left">
                         <td>{{ player["username"] }}</td>
                         <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
                         <td>{{ player["animals"] }}</td>
@@ -105,13 +105,13 @@ Leaderboards
                 </tbody>
             </table>
             <table id="animals" align="center">
-                <thead>
+                <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
                 </thead>
                 <tbody>
                     {% for player in animals_points %}
-                    <tr>
+                    <tr align="left">
                         <td>{{ player["username"] }}</td>
                         <td>{{ player["animals"] }}</td>
                     </tr>
@@ -119,13 +119,13 @@ Leaderboards
                 </tbody>
             </table>
             <table id="video_games" align="center">
-                <thead>
+                <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
                 </thead>
                 <tbody>
                     {% for player in video_games_points %}
-                    <tr>
+                    <tr align="left">
                         <td>{{ player["username"] }}</td>
                         <td>{{ player["video_games"] }}</td>
                     </tr>
@@ -133,13 +133,13 @@ Leaderboards
                 </tbody>
             </table>
             <table id="celebrities" align="center">
-                <thead>
+                <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
                 </thead>
                 <tbody>
                     {% for player in celebrities_points %}
-                    <tr>
+                    <tr align="left">
                         <td>{{ player["username"] }}</td>
                         <td>{{ player["celebrities"] }}</td>
                     </tr>
@@ -147,13 +147,13 @@ Leaderboards
                 </tbody>
             </table>
             <table id="comics" align="center">
-                <thead>
+                <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
                 </thead>
                 <tbody>
                     {% for player in comics_points %}
-                    <tr>
+                    <tr align="left">
                         <td>{{ player["username"] }}</td>
                         <td>{{ player["comics"] }}</td>
                     </tr>
@@ -161,13 +161,13 @@ Leaderboards
                 </tbody>
             </table>
             <table id="general_knowledge" align="center">
-                <thead>
+                <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
                 </thead>
                 <tbody>
                     {% for player in general_knowledge_points %}
-                    <tr>
+                    <tr align="left">
                         <td>{{ player["username"] }}</td>
                         <td>{{ player["general_knowledge"] }}</td>
                     </tr>

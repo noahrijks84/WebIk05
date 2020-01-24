@@ -18,7 +18,16 @@
             <p>If no lobby exists, one will be created</p>
             <p>If a lobby does exist, you will join it</p>
             <form id="lobbyform" action="">
-                <input id="lobbybox" autocomplete="off"/><button class="buttonsquare" id="chatbutton">Join Lobby!</button>
+                <input id="lobbybox" autocomplete="off"/>
+                <select id="categories" onchange='onCategorySelect()'>
+                    <option disabled selected value>Choose Category</option>
+                    <option value="animals">Animals</option>
+                    <option value="video_games">Video Games</option>
+                    <option value="celebrities">Celebrities</option>
+                    <option value="comics">Comics</option>
+                    <option value="general_knowledge">General Knowledge</option>
+                </select>
+                <button class="buttonsquare" id="chatbutton">Join Lobby!</button>
             </form>
         </div>
         <div id="opengame">
@@ -36,7 +45,9 @@
     $('#lobbyform').submit(function(e){
         console.log("test")
         e.preventDefault(); 
-        socket.emit('lobbyrequest', $('#lobbybox').val());
+        let lobbyname = $('#lobbybox').val()
+        let lobbycategory = $('#categories').val()
+        socket.emit('lobbyrequest', lobbyname, lobbycategory);
         $('#lobbybox').val('');
 
         $.ajax({

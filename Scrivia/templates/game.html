@@ -158,6 +158,11 @@
         document.getElementById("answers").innerHTML = ("");
     });
 
+    socket.on('pointsregister', function(username, points, category){
+        let round_data = [username, points, category]
+        $.get("/registerpoints?round_data=" + round_data)
+    });
+
     socket.on('picture', function(message){
         var img = new Image;
         img.onload = function(){

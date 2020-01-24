@@ -23,7 +23,6 @@ def after_request(response):
     return response
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///finance.db")
 trivdb = SQL("sqlite:///trivdb.db")
 scrivdb = SQL("sqlite:///scrivia.db")
 
@@ -38,6 +37,7 @@ def on_pageleave():
     if username in current_users:
         current_users[username][0] = None
         current_users[username][1] = 0
+        current_users[username][2] = None
     return jsonify(True)
 
 @socketio.on('leaverequest')
@@ -47,13 +47,15 @@ def on_leave_request():
     if username in current_users:
         current_users[username][0] = None
         current_users[username][1] = 0
+        current_users[username][2] = None
 
 @socketio.on('lobbyrequest')
 @login_required
-def on_lobby_request(lobby):
+def on_lobby_request(lobby, category):
     username = session["username"]
+    print(category)
     join_room(lobby)
-    current_users[username] = [lobby, 0, True]
+    current_users[username] = [lobby, 0, category]
 
 @socketio.on('joinrequest')
 @login_required
@@ -99,9 +101,45 @@ def game_start():
 
     emit('endfase', broadcast=True)
     for player in lobby_players:
+        if player in current_users:
+            if current_users[player][0] == room:
+                username = player
+                points = current_users[player][1]
+                category = current_users[player][2]
+
+                emit("pointsregister", (username, points, category))
+                # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
+                #         points=points,
+                #         username=username)
+                # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
+                #         points=points,
+                #         username=username,
+                #         category=category)
+
         print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
     time.sleep(10)
+
+@app.route("/registerpoints")
+@login_required
+def on_registerpoints():
+    round_data = request.args.get("round_data")
+    split_data = round_data.split(',')
+    username = split_data[0]
+    points = split_data[1]
+    category = split_data[2]
+
+    scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
+            points=points,
+            username=username)
+    scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
+            points=points,
+            username=username,
+            category=category)
+
+    return jsonify(True)
+    
+
 
 @socketio.on('answer')
 @login_required
@@ -149,7 +187,7 @@ def check():
     username = request.args.get("username")
 
     # Select all usernames from database
-    users = db.execute("SELECT username FROM users")
+    users = scrivdb.execute("SELECT username FROM users")
 
     # Return False if username length less than 1
     if len(username) < 1:
@@ -183,7 +221,7 @@ def login():
             return apology("must provide password", 400)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = :username",
+        rows = scrivdb.execute("SELECT * FROM users WHERE username = :username",
                           username=request.form.get("username"))
 
         # Ensure username exists and password is correct
@@ -260,20 +298,21 @@ def register():
             return apology("passwords must match", 400)
 
         # Register username and hashed password
-        registration = db.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
+        registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
+        scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
 
         # If username already exists, show error
         if not registration:
             return apology("username already exists, choose another", 400)
 
         # Get the registered users id
-        user_id = db.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
+        user_id = scrivdb.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
 
         # Remember that the user has logged in
         session["user_id"] = user_id[0]["id"]
 
         # Redirect user to home page
-        return redirect("/")
+        return redirect("/login")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
