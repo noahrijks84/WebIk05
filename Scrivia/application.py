@@ -83,12 +83,11 @@ def get_questions(amount, category):
     return json_response
     
 
-def call_question_gk():
-    question = get_questions(1, 27)[0]
+def call_question(cate):
+    question = get_questions(1, cate)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
-    print(intlist)
     if len(intlist) >= 1:
-        return call_question_gk()
+        return call_question(cate)
     else:
         return question
 
@@ -101,10 +100,17 @@ def game_start():
     print(lobby_players)
 
     for host in lobby_players:
-        triv = call_question_gk()
+        catlook = current_users[username][2]
+        print("CATEGORY =", catlook)
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+                            '27', '15', '26', '29', '9']
+        for cat in range(int(len(category_list) / 2.0)):
+            if category_list[cat] == catlook:
+                category = category_list[cat + 5]
+        triv = call_question(category)
         correct = triv['correct_answer']
         question = triv["question"]
-        answers = triv["incorrect_answer"]
+        answers = triv["incorrect_answers"]
         answers.append(correct)
         random.shuffle(answers)
 
@@ -113,7 +119,10 @@ def game_start():
 
         hostdata = question + " answer: " + correct
 
-        emit('fase1', (host, hostdata), broadcast=True, room=room)
+        pointsdata = current_users[username][1]
+        print('pointsdata = ', pointsdata)
+
+        emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
         time.sleep(10)
 
         emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
@@ -159,8 +168,6 @@ def on_registerpoints():
 
     return jsonify(True)
     
-
-
 @socketio.on('answer')
 @login_required
 def on_answer(answer):
