@@ -39,6 +39,8 @@ def on_pageleave():
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
+        current_users[username][3] = None
+        current_users[username][4] = 0
     return jsonify(True)
 
 @socketio.on('leaverequest')
@@ -49,14 +51,17 @@ def on_leave_request():
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
+        current_users[username][3] = None
+        current_users[username][4] = 0
 
 @socketio.on('lobbyrequest')
 @login_required
-def on_lobby_request(lobby, category):
+def on_lobby_request(lobby, category, gamemode):
     username = session["username"]
     print(category)
     join_room(lobby)
-    current_users[username] = [lobby, 0, category]
+    hearts = 0
+    current_users[username] = [lobby, 0, category, gamemode, hearts]
 
 @socketio.on('joinrequest')
 @login_required
@@ -149,6 +154,75 @@ def game_start():
         current_users[player][1] = 0
     time.sleep(10)
 
+
+############
+#
+# TimeAttack
+#
+############
+
+@socketio.on('startTimeAttack')
+@login_required
+def TimeAttack_start():
+    username = session["username"]
+    room = current_users[username][0]
+    lobby_players = [k for k,v in current_users.items() if v[0] == room]
+    current_users[username][4] = 3
+    timeout = 20
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        if current_users[username][4] <= 0:
+            break
+        print("you have", current_users[username][4], "lives")
+        catlook = current_users[username][2]
+        print("CATEGORY =", catlook)
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+                            '27', '15', '26', '29', '9']
+        for cat in range(int(len(category_list) / 2.0)):
+            if category_list[cat] == catlook:
+                category = category_list[cat + 5]
+        triv = call_question(category)
+        correct = triv['correct_answer']
+        question = triv["question"]
+        answers = triv["incorrect_answers"]
+        answers.append(correct)
+        random.shuffle(answers)
+        correct_answers[room] = correct
+
+        pointsdata = current_users[username][1]
+        print('pointsdata = ', pointsdata)
+
+        emit('newround', (answers, question, correct), broadcast=True, room=room)
+        time.sleep(10)
+    print("time's up!")
+    emit('endfase', broadcast=True)
+    player = lobby_players[0]
+    if player in current_users:
+        if current_users[player][0] == room:
+            username = player
+            points = current_users[player][1]
+            category = current_users[player][2]
+
+            emit("pointsregister", (username, points, category))
+            # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
+            #         points=points,
+            #         username=username)
+            # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
+            #         points=points,
+            #         username=username,
+            #         category=category)
+
+    print(player + ": " + str(current_users[player][1]))
+    current_users[player][1] = 0
+    time.sleep(10)
+
+
+##################
+#
+# einde TimeAttack
+#
+##################
+
 @app.route("/registerpoints")
 @login_required
 def on_registerpoints():
@@ -175,8 +249,11 @@ def on_answer(answer):
     lobby = current_users[username][0]
     if correct_answers[lobby] == answer:
         current_users[username][1] += 3
-        host = current_hosts[lobby]
-        current_users[host][1] += 1
+    else:
+        if current_users[username][3] == 'TimeAttack':
+            current_users[username][4] -= 1
+            print("you lost a life!!!")
+
 
 @socketio.on('picture')
 def handle_user_picture(message):
@@ -205,6 +282,11 @@ def index():
 @login_required
 def game():
     return render_template("game.html")
+
+@app.route("/timeattack", methods=["GET"])
+@login_required
+def timeattack():
+    return render_template("timeattack.html")
 
 
 @app.route("/check", methods=["GET"])

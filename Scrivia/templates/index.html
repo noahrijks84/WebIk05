@@ -27,6 +27,11 @@
                     <option value="comics">Comics</option>
                     <option value="general_knowledge">General Knowledge</option>
                 </select>
+                <select id="gamemode">
+                    <option disabled selected value>Choose Gamemode</option>
+                    <option value="regular">Regular Scrivia</option>
+                    <option value="TimeAttack">TimeAttack!</option>
+                </select>
                 <button class="buttonsquare" id="chatbutton">Join Lobby!</button>
             </form>
         </div>
@@ -47,16 +52,28 @@
         e.preventDefault(); 
         let lobbyname = $('#lobbybox').val()
         let lobbycategory = $('#categories').val()
-        socket.emit('lobbyrequest', lobbyname, lobbycategory);
+        let gamemode = $('#gamemode').val()
+        socket.emit('lobbyrequest', lobbyname, lobbycategory, gamemode);
         $('#lobbybox').val('');
-
-        $.ajax({
+        if (gamemode == 'regular'){
+            $.ajax({
         	type : "GET",
         	url : '/game',
         	success: function (data) {
         		window.location.href = "game"
         		}
-	    });
+	        });
+        }
+        else{
+            $.ajax({
+        	type : "GET",
+        	url : '/timeattack',
+        	success: function (data) {
+        		window.location.href = "timeattack"
+        		}
+	        });
+        }
+        
     });
 
     </script>
