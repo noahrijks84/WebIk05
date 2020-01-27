@@ -1,3 +1,4 @@
+
 {% extends "layout.html" %}
 
 {% block title %}
@@ -5,40 +6,93 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/register" method="post" id="registration">
+    <form action="/register" method="post">
         <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text" id="usernameID">
+            <input oninput="checkUsername()" autocomplete="off" autofocus class="form-control" id="username" name="username" placeholder="Username" type="text">
+            <p class="text-danger" id="username-feedback"></p>
         </div>
         <div class="form-group">
-            <input class="form-control" name="password" placeholder="Password" type="password">
+            <input id="password" oninput="validateInput()" class="form-control" type="password" name="password" placeholder="Password">
+            <meter max="4" id="password-strength-meter"></meter>
+            <p id="password-strength-text"></p>
+            <p id="password-feedback"></p>
         </div>
         <div class="form-group">
-            <input class="form-control" name="confirmation" placeholder="Password (again)" type="password">
+            <input id="password-confirm" oninput="validateInput()" class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
+            <p id="password-confirm-feedback"></p>
         </div>
-        <button class="btn btn-primary buttongeneral" type="button" id="button1">Register</button>
+        <button class="btn btn-primary" id="butn" type="submit" disabled>Register</button>
     </form>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.2.0/zxcvbn.js"></script>
     <script>
-    // Stop the button from working until the query is finished
-    document.getElementById("button1").addEventListener("click", function(event) {
-    event.preventDefault();
-    let input = document.querySelector("#usernameID").value;
-
-    // Get the username using GET and run it through /check
-    $.get("/check?username=" + input, function(data)
-    {
-        // If it's true, submit the form
-        if (data == true)
-        {
-            document.getElementById("registration").submit();
+        // set to false at first, but might later become true after validation
+        let usernameValid = false;
+        let passwordValid = false;
+        $("#password-feedback").text("Password needs to be atleast 8 characters long, must contain a number, a letter, a capital letter and a special symbol");
+        
+        function enableOrDisableSubmitBtn() {
+            // disable submit btn if both username and password are valid
+            $("#butn").prop("disabled", !(usernameValid && passwordValid));
         }
 
-        // If false, show user alert and prevent submission
-        else
-        {
-            alert("username is taken, choose another");
+        function checkUsername() {
+            // get trimmed value from input
+            const username = $('#username').val().trim();
+
+            // set trimmed input value
+            $("#username").val(username);
+
+            // disable first, validate later
+            $("#butn").prop("disabled", true);
+            usernameValid = false;
+
+            // fire get request using username as query
+            $.get("/check", {username})
+            .done(data => {
+                // data is true if username was valid
+                usernameValid = data;
+
+                // remove error msg if is valid, else set error msg
+                $('#username-feedback').text(data ? "" : "Username already in use");
+
+                enableOrDisableSubmitBtn();
+            });
         }
-    });
-    });
+        function validateInput() {
+            // get value from inputs
+            const password = $("#password").val();
+            const passwordConfirm = $("#password-confirm").val();
+
+            // atleast 1 capitalizedd letter, atleast 1 number and atleast 8 characters in total
+            const regex = /^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/g;
+            const match = password.match(regex) && passwordConfirm.match(regex);
+
+            $("#butn").prop("disabled", true);
+            passwordValid = match;
+            enableOrDisableSubmitBtn();
+            
+            const strength = {
+                0: "Worst",
+                1: "Bad",
+                2: "Weak",
+                3: "Good",
+                4: "Strong"
+            }    
+            const meter = $("#password-strength-meter");
+            const text = $("#password-strength-text");
+
+            const result = zxcvbn(password);
+            
+            // Update the password strength meter
+            meter.val(result.score);
+
+            // Update the text indicator
+            if (password.trim() !== "") {
+                text.text("Strength: " + strength[result.score]); 
+            } 
+            else {
+                text.text("");
+            }
+        }
     </script>
 {% endblock %}
