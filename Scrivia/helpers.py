@@ -1,3 +1,15 @@
+"""
+****************************************************************************
+ * SCRIVIA - DRAWING AND TRIVIA GAME
+ * helpers.py
+ *
+ * Webprogrammeren en Databases IK
+ * Sava Arbutina, Noah Milidragović, Rogier Wesseling, Nick Duijm
+ *
+ * The helper functions, to make sure people need to be logged in and to render apologies.
+****************************************************************************
+"""
+
 import requests
 import urllib.parse
 import os
@@ -33,31 +45,3 @@ def login_required(f):
             return redirect("/login")
         return f(*args, **kwargs)
     return decorated_function
-
-
-def lookup(symbol):
-    """Look up quote for symbol."""
-
-    # Contact API
-    try:
-        api_key = os.environ.get("API_KEY")
-        response = requests.get(f"https://cloud-sse.iexapis.com/stable/stock/{urllib.parse.quote_plus(symbol)}/quote?token={api_key}")
-        response.raise_for_status()
-    except requests.RequestException:
-        return None
-
-    # Parse response
-    try:
-        quote = response.json()
-        return {
-            "name": quote["companyName"],
-            "price": float(quote["latestPrice"]),
-            "symbol": quote["symbol"]
-        }
-    except (KeyError, TypeError, ValueError):
-        return None
-
-
-def usd(value):
-    """Format value as USD."""
-    return f"${value:,.2f}"

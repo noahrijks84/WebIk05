@@ -1,3 +1,15 @@
+"""
+****************************************************************************
+ * SCRIVIA - DRAWING AND TRIVIA GAME
+ * applications.py
+ *
+ * Webprogrammeren en Databases IK
+ * Sava Arbutina, Noah Milidragović, Rogier Wesseling, Nick Duijm
+ *
+ * The controller for our game SCRIVIA, where you can draw and answer trivia.
+****************************************************************************
+"""
+
 import os
 from cs50 import SQL
 import time, random
@@ -7,7 +19,7 @@ from flask_socketio import SocketIO, emit, send, join_room, leave_room, rooms
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import apology, login_required, lookup, usd
+from helpers import apology, login_required
 import json
 
 # Configure application
@@ -281,13 +293,15 @@ def logout():
 @app.route("/leaderboards", methods=["GET", "POST"])
 @login_required
 def leaderboards():
-    # list of the categories to send to HTML
+    """Show leaderboards of top 10 ranked players in the game, can also filter by categories"""
+
+    # List of the categories to send to HTML
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
-    # show the the sum of the points of all the categories
+    # Show the the sum of the points of all the categories
     total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
 
-    # show the points per category
+    # Show the points per category
     animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
     video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
     celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
@@ -301,7 +315,8 @@ def leaderboards():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Register user"""
+    """Register the user"""
+
     # Forget any user_id
     session.clear()
 
@@ -324,7 +339,7 @@ def register():
         elif not request.form.get("confirmation") == request.form.get("password"):
             return apology("passwords must match", 400)
 
-        # Register username and hashed password
+        # Register username and hashed password and insert new member into statistics page
         registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
         scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
 
