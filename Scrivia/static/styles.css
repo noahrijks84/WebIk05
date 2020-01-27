@@ -239,6 +239,14 @@ table
 {
     counter-reset: rowNumber;
 }
+/* landing page */
+#landingcontent {
+    width: 100%;
+    height: 80vh;
+    float:left;
+    background-color: #FBFFFE;
+    overflow-y: auto;
+}
 
 table tr > td:first-child
 {
