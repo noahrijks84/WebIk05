@@ -39,17 +39,22 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf-8">
     var socket = io();
-
+    
+    // removing user from the previous lobby if possible
     socket.emit('leaverequest');
 
     $('#lobbyform').submit(function(e){
+        // submitting the chosen lobby
         console.log("test")
         e.preventDefault(); 
         let lobbyname = $('#lobbybox').val()
         let lobbycategory = $('#categories').val()
+        // submitting a lobbyrequest to let the server store the chosen lobby
         socket.emit('lobbyrequest', lobbyname, lobbycategory);
+
         $('#lobbybox').val('');
 
+        // redirecting to the game page
         $.ajax({
         	type : "GET",
         	url : '/game',

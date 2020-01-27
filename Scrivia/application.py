@@ -31,6 +31,7 @@ current_users = {}
 correct_answers = {}
 current_hosts = {}
 
+# Removing the user from the lobby when closing/reloading the tab
 @app.route("/leaverequest")
 @login_required
 def on_pageleave():
@@ -41,6 +42,7 @@ def on_pageleave():
         current_users[username][2] = None
     return jsonify(True)
 
+# Removing the user from the lobby when navigating to the lobby page
 @socketio.on('leaverequest')
 @login_required
 def on_leave_request():
@@ -50,6 +52,7 @@ def on_leave_request():
         current_users[username][1] = 0
         current_users[username][2] = None
 
+# Adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
 def on_lobby_request(lobby, category):
@@ -58,6 +61,7 @@ def on_lobby_request(lobby, category):
     join_room(lobby)
     current_users[username] = [lobby, 0, category]
 
+# readding the user to the chosen lobby when entering the game page
 @socketio.on('joinrequest')
 @login_required
 def on_join_request():
@@ -67,12 +71,8 @@ def on_join_request():
         lobby = current_users[username][0]
         if lobby != None:
             join_room(lobby)
-        else:
-            return redirect("/")
-    else:
-        return redirect("/")
 
-
+# Requesting a question from the api
 def get_questions(amount, category):
     import requests
     url = 'https://opentdb.com/api.php'
@@ -82,7 +82,7 @@ def get_questions(amount, category):
     json_response = response.json()['results']
     return json_response
     
-
+# Making the question usable in terms of format
 def call_question(cate):
     question = get_questions(1, cate)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
@@ -91,22 +91,25 @@ def call_question(cate):
     else:
         return question
 
+# Running a game for players inside the specific lobby
 @socketio.on('startgame')
 @login_required
 def game_start():
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
-    print(lobby_players)
 
+    # iterating thru the players in the lobby
     for host in lobby_players:
         catlook = current_users[username][2]
-        print("CATEGORY =", catlook)
+
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
+
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
+
         triv = call_question(category)
         correct = triv['correct_answer']
         question = triv["question"]
@@ -117,38 +120,39 @@ def game_start():
         current_hosts[room] = host
         correct_answers[room] = correct
 
+        # formatting data to display with the host player
         hostdata = question + " answer: " + correct
 
+        # getting the current amount of points to display
         pointsdata = current_users[username][1]
-        print('pointsdata = ', pointsdata)
 
+        # letting javascript run the drawing fase at the client
         emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
         time.sleep(10)
 
+        # letting javascript run the guessing fase at the client
         emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
         time.sleep(10)
 
+    # letting javascript run the endfase of the game finishing everything up
     emit('endfase', broadcast=True)
+    # iterating thru players left in te lobby
     for player in lobby_players:
         if player in current_users:
             if current_users[player][0] == room:
+                # clearing all the player data
                 username = player
                 points = current_users[player][1]
                 category = current_users[player][2]
 
+                # emitting a request to register the user points
                 emit("pointsregister", (username, points, category))
-                # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
-                #         points=points,
-                #         username=username)
-                # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
-                #         points=points,
-                #         username=username,
-                #         category=category)
 
         print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
     time.sleep(10)
 
+# registering the points to the users account by category
 @app.route("/registerpoints")
 @login_required
 def on_registerpoints():
@@ -178,11 +182,14 @@ def on_answer(answer):
         host = current_hosts[lobby]
         current_users[host][1] += 1
 
+# emitting the picture drawn by the host
 @socketio.on('picture')
 def handle_user_picture(message):
-    emit('picture', message, broadcast=True)
+    username = session["username"]
+    room = current_users[username][0]
+    emit('picture', message, broadcast=True, room=room)
 
-
+# emitting user chat messages to other players in the room
 @socketio.on('chat message')
 @login_required
 def handle_user_chat(message):
@@ -191,6 +198,7 @@ def handle_user_chat(message):
     room = current_users[username][0]
     emit('user message', message, broadcast=True, room=room)
 
+# returning a requested player username
 @app.route("/getusername", methods=["GET"])
 @login_required
 def username():
@@ -200,6 +208,10 @@ def username():
 @login_required
 def index():
     return render_template("index.html")
+
+@app.route("/landing", methods=["GET"])
+def landing():
+    return render_template("landing.html")
 
 @app.route("/game", methods=["GET"])
 @login_required
