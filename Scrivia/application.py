@@ -288,12 +288,103 @@ def leaderboards():
     return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    # password = request.form.get("password")
+    # new_password = request.form.get("new_password")
+    # new_confirm = request.form.get("new_confirm")
 
+    if request.method == "POST":
+
+        # Make sure password was acknowledged
+        if not request.form.get("password"):
+            return apology("must provide old password", 400)
+
+        # Make sure new password was acknowledged
+        elif not request.form.get("new_password"):
+            return apology("must provide new password", 400)
+
+        # New password must match the regex pattern
+        elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("new_password")):
+            return apology("invalid password format", 400)
+
+        # New password must be at least 7 characters long
+        elif len(request.form.get("new_password")) < 7:
+            return apology("new password must be at least 7 characters long", 400)
+
+        # Make sure confirmation was acknowledged
+        elif not request.form.get("new_confirm"):
+            return apology("must provide confirmation", 400)
+
+        # Make sure the new password is different to the old one
+        elif request.form.get("new_password") == request.form.get("password"):
+            return apology("must provide different password", 400)
+
+        # If passwords do not match, show error
+        elif not request.form.get("new_confirm") == request.form.get("new_password"):
+            return apology("passwords must match", 400)
+
+        # Make sure password satisfies
+        password_hash = scrivdb.execute("SELECT hash FROM users WHERE id = :user", user=session["user_id"])
+        if not check_password_hash(password_hash[0]["hash"], request.form.get("password")):
+            return apology("wrong password", 400)
+
+        # Replace the old password
+        scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
+            request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
+        
+        return redirect("/")
+    else:
+        return render_template("change_password.html")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    # """Register user"""
-    # # Forget any user_id
+    """Register user"""
+
+    # User reached route via POST (as by submitting a form via POST)
+    if request.method == "POST":
+        
+        # Ensure username was submitted
+        if not request.form.get("username"):
+            return apology("must provide username", 400)
+
+        # if username contains whitespace at the beginning or end
+        elif re.search(r"^\s|\s$", request.form.get("username")):
+            return apology("invalid username format", 400)
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            return apology("must provide password", 400)
+        
+        # Password must match the regex pattern
+        elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("password")):
+            return apology("invalid password format", 400)
+
+        # Password must be at least 7 characters long
+        elif len(request.form.get("password")) < 7:
+            return apology("password must be at least 7 characters long", 400)
+
+        # If passwords do not match, show error
+        elif not request.form.get("confirmation") == request.form.get("password"):
+            return apology("passwords must match", 400)
+       
+        # Check if username is taken
+        answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = request.form.get("username"))
+        if len(answer) > 0:
+            return apology("username was already taken", 403)
+
+        # Query: insert values in database
+        scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :password)", username = request.form.get("username"), password=generate_password_hash(request.form.get("password")))
+        
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    else:
+        return render_template("register.html")
+
+    # Forget any user_id
     # session.clear()
 
     # # User reached route via POST (as by submitting a form via POST)
@@ -336,47 +427,6 @@ def register():
     # # User reached route via GET (as by clicking a link or via redirect)
     # else:
     #     return render_template("register.html")
-
-    # User reached route via POST (as by submitting a form via POST)
-    if request.method == "POST":
-        # Ensure username was submitted
-        if not request.form.get("username"):
-            return apology("must provide username", 400)
-
-        # if username contains whitespace at the beginning or end
-        elif re.search(r"^\s|\s$", request.form.get("username")):
-            return apology("invalid username format", 400)
-
-        # Ensure password was submitted
-        elif not request.form.get("password"):
-            return apology("must provide password", 400)
-        
-        # Password must match the regex pattern
-        elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("password")):
-            return apology("invalid password format", 400)
-
-        # Password must be at least 7 characters long
-        elif len(request.form.get("password")) < 7:
-            return apology("password must be at least 7 characters long", 400)
-
-        # If passwords do not match, show error
-        elif not request.form.get("confirmation") == request.form.get("password"):
-            return apology("passwords must match", 400)
-       
-        # Check if username is taken
-        answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = request.form.get("username"))
-        if len(answer) > 0:
-            return apology("username was already taken", 403)
-
-        # Query: insert values in database
-        scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :password)", username = request.form.get("username"), password=generate_password_hash(request.form.get("password")))
-        
-        # Redirect user to home page
-        return redirect("/")
-
-    # User reached route via GET (as by clicking a link or via redirect)
-    else:
-        return render_template("register.html")
 
 def errorhandler(e):
     """Handle error"""
