@@ -315,3 +315,7 @@ table tr td:first-child::before{
 
 
 
+/* timeattack page */
+#ta_button{
+    padding: 20px;
+}
