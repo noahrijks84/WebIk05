@@ -20,6 +20,8 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
+import re
+import logging
 import json
 import re
 import logging
@@ -171,14 +173,14 @@ def game_start():
 
         # letting javascript run the drawing fase at the client
         emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
-        time.sleep(10)
+        time.sleep(30)
 
         # letting javascript run the guessing fase at the client
-        emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
-        time.sleep(10)
+        emit('fase2', (host, answers, question, correct, pointsdata), broadcast=True, room=room)
+        time.sleep(15)
 
     # letting javascript run the endfase of the game finishing everything up
-    emit('endfase', broadcast=True)
+    emit('endfase', pointsdata, broadcast=True)
     # iterating thru players left in te lobby
     for player in lobby_players:
         if player in current_users:
@@ -189,7 +191,7 @@ def game_start():
                 category = current_users[player][2]
 
                 # emitting a request to register the user points
-                emit("pointsregister", (username, points, category))
+                emit("pointsregister", (username, points, category, pointsdata))
 
         print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
@@ -404,26 +406,40 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-
-@app.route("/leaderboards", methods=["GET", "POST"])
+@app.route("/choose_leaderboards", methods=["GET"])
 @login_required
-def leaderboards():
-    """Show leaderboards of top 10 ranked players in the game, can also filter by categories"""
+def choose_leaderboards():
+    return render_template("choose_leaderboards.html")
+
+@app.route("/leaderboards_classic", methods=["GET"])
+@login_required
+def leaderboards_classic_redirect():
+    return render_template("leaderboards_classic.html")
+
+@app.route("/leaderboards_timeattack", methods=["GET"])
+@login_required
+def leaderboards_timeattack_redirect():
+    return render_template("leaderboards_timeattack.html")
+
+@app.route("/leaderboards_classic", methods=["GET", "POST"])
+@login_required
+def leaderboards_classic():
+    """Show leaderboards of top 10 ranked players for the Classic game mode, can also filter by categories"""
 
     # List of the categories to send to HTML
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
-    # Show the the sum of the points of all the categories
+    # Show the the sum of the points of all the categories for the Classic game mode
     total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
 
-    # Show the points per category
+    # Show the points per category for the Classic game mode
     animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
     video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
     celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
     comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
     general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
 
-    return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
+    return render_template("leaderboards_classic.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
 @app.route("/change_password", methods=["GET", "POST"])
@@ -552,52 +568,6 @@ def register():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("register.html")
-
-
-    # """Register the user"""
-
-    # # Forget any user_id
-    # session.clear()
-
-    # # User reached route via POST (as by submitting a form via POST)
-    # if request.method == "POST":
-
-    #     # Ask user to input username
-    #     if not request.form.get("username"):
-    #         return apology("must input username", 400)
-
-    #     # Ask user to input password
-    #     elif not request.form.get("password"):
-    #         return apology("must input password", 400)
-
-    #     # Password must be at least 7 characters long
-    #     if len(request.form.get("password")) < 7:
-    #         return apology("password must be at least 7 characters long", 400)
-
-    #     # If passwords do not match, show error
-    #     elif not request.form.get("confirmation") == request.form.get("password"):
-    #         return apology("passwords must match", 400)
-
-    #     # Register username and hashed password and insert new member into statistics page
-    #     registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
-    #     scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
-
-    #     # If username already exists, show error
-    #     if not registration:
-    #         return apology("username already exists, choose another", 400)
-
-    #     # Get the registered users id
-    #     user_id = scrivdb.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
-
-    #     # Remember that the user has logged in
-    #     session["user_id"] = user_id[0]["id"]
-
-    #     # Redirect user to home page
-    #     return redirect("/login")
-
-    # # User reached route via GET (as by clicking a link or via redirect)
-    # else:
-    #     return render_template("register.html") 
 
 def errorhandler(e):
     """Handle error"""
