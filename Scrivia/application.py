@@ -21,17 +21,11 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
 import json
-import re
-import logging
-
 
 # Configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
-
-# show prints
-logging.basicConfig(level=logging.DEBUG)
 
 # Ensure responses aren't cached
 @app.after_request
@@ -55,11 +49,17 @@ current_hosts = {}
 def on_pageleave():
     username = session["username"]
     if username in current_users:
+        room = current_users[username][0]
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
         current_users[username][3] = None
         current_users[username][4] = 0
+
+        message = username + " has left the game"
+        lobby_players = [k for k,v in current_users.items() if v[0] == room]
+        socketio.emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+        socketio.emit('user message', message, broadcast=True, room=room)
     return jsonify(True)
 
 # Removing the user from the lobby when navigating to the lobby page
@@ -94,24 +94,37 @@ def on_join_request():
         lobby = current_users[username][0]
         if lobby != None:
             join_room(lobby)
+            room = lobby
+            lobby_players = [k for k,v in current_users.items() if v[0] == room]
+            message = username + " has joined the game"
+            emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+            emit('user message', message, broadcast=True, room=room)
+        else:
+            emit("nolobby")
+    else:
+        emit("nolobby")
 
 # Requesting a question from the api
-def get_questions(amount, category):
+def get_questions(category, type):
     import requests
     url = 'https://opentdb.com/api.php'
-    parameters = {'amount': amount, 'type': 'multiple', 'category': category, 'difficulty' : 'easy'}
+    if type == 'timeattack':
+        parameters = {'amount': '1', 'type': 'multiple', 'category': category}
+    elif type == 'regular':
+        parameters = {'amount': '1', 'type': 'multiple', 'category': category, 'difficulty': 'easy'}
     response = requests.get(url, params=parameters)
     response.raise_for_status()
     json_response = response.json()['results']
     return json_response
     
 # Making the question usable in terms of format
-def call_question(cate):
-    question = get_questions(1, cate)[0]
+def call_question(cate, diff, questionset):
+    question = get_questions(cate, diff)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
-    if len(intlist) >= 1:
-        return call_question(cate)
+    if len(intlist) >= 1 or question['correct_answer'] in questionset:
+        return call_question(cate, diff, questionset)
     else:
+        print(questionset)
         return question
 
 # Running a game for players inside the specific lobby
@@ -121,19 +134,19 @@ def game_start():
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
-
+    questionset = set()
     # iterating thru the players in the lobby
     for host in lobby_players:
         catlook = current_users[username][2]
 
-        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+        category_list = ['any','animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
-        triv = call_question(category)
+        triv = call_question(category, 'regular', questionset)
         correct = triv['correct_answer']
         question = triv["question"]
         answers = triv["incorrect_answers"]
@@ -142,6 +155,8 @@ def game_start():
 
         current_hosts[room] = host
         correct_answers[room] = correct
+
+        questionset.add(correct)
 
         # formatting data to display with the host player
         hostdata = question + " answer: " + correct
@@ -176,12 +191,6 @@ def game_start():
     time.sleep(10)
 
 
-############
-#
-# TimeAttack
-#
-############
-
 @socketio.on('startTimeAttack')
 @login_required
 def TimeAttack_start():
@@ -189,33 +198,39 @@ def TimeAttack_start():
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
     current_users[username][4] = 3
-    timeout = 20
+    
+    questionset = set()
+    timeout = 90
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
+
         if current_users[username][4] <= 0:
             break
-        print("you have", current_users[username][4], "lives")
+        lives = current_users[username][4]
         catlook = current_users[username][2]
-        print("CATEGORY =", catlook)
+
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
-        triv = call_question(category)
+
+        triv = call_question(category, 'timeattack', questionset)
+
         correct = triv['correct_answer']
         question = triv["question"]
         answers = triv["incorrect_answers"]
+
         answers.append(correct)
         random.shuffle(answers)
         correct_answers[room] = correct
+        
+        questionset.add(correct)
 
         pointsdata = current_users[username][1]
-        print('pointsdata = ', pointsdata)
 
-        emit('newround', (answers, question, correct), broadcast=True, room=room)
-        time.sleep(10)
-    print("time's up!")
+        emit('newround', (answers, question, correct, lives, pointsdata), broadcast=True, room=room)
+        time.sleep(5)
     emit('endfase', broadcast=True)
     player = lobby_players[0]
     if player in current_users:
@@ -225,24 +240,10 @@ def TimeAttack_start():
             category = current_users[player][2]
 
             emit("pointsregister", (username, points, category))
-            # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
-            #         points=points,
-            #         username=username)
-            # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
-            #         points=points,
-            #         username=username,
-            #         category=category)
 
-    print(player + ": " + str(current_users[player][1]))
     current_users[player][1] = 0
     time.sleep(10)
 
-
-##################
-#
-# einde TimeAttack
-#
-##################
 
 @app.route("/registerpoints")
 @login_required
@@ -273,7 +274,6 @@ def on_answer(answer):
     else:
         if current_users[username][3] == 'TimeAttack':
             current_users[username][4] -= 1
-            print("you lost a life!!!")
 
 
 # emitting the picture drawn by the host
@@ -320,17 +320,36 @@ def timeattack():
 
 @app.route("/check", methods=["GET"])
 def check():
-    
+    """Return true if username available, else false, in JSON format"""
+
     # retrieving username
     username = request.args.get("username").strip()
-    
+
     # retrieving existing usernames
     answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = username)
-    
+
     # checking if username existed
     data = not len(answer) > 0
 
     return jsonify(data)
+    
+    # # Get username from GET
+    # username = request.args.get("username")
+
+    # # Select all usernames from database
+    # users = scrivdb.execute("SELECT username FROM users")
+
+    # # Return False if username length less than 1
+    # if len(username) < 1:
+    #     return jsonify(False)
+
+    # # Return false if username exists
+    # for user in users:
+    #     if user["username"] == username:
+    #         return jsonify(False)
+
+    # # If username length greater than 1 and doesn't exist, return True
+    # return jsonify(True)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -380,40 +399,36 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-@app.route("/choose_leaderboards", methods=["GET"])
-@login_required
-def choose_leaderboards():
-    return render_template("choose_leaderboards.html")
 
-@app.route("/leaderboards_original", methods=["GET", "POST"])
+@app.route("/leaderboards", methods=["GET", "POST"])
 @login_required
-def leaderboards_original():
-    """Show leaderboards of top 10 ranked players for the original game mode, can also filter by categories"""
+def leaderboards():
+    """Show leaderboards of top 10 ranked players in the game, can also filter by categories"""
 
     # List of the categories to send to HTML
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
-    # Show the the sum of the points of all the categories for the original game mode
+    # Show the the sum of the points of all the categories
     total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
 
-    # Show the points per category for the original game mode
+    # Show the points per category
     animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
     video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
     celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
     comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
     general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
 
-    return render_template("leaderboards_original.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
+    return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
-@app.route("/change_password", methods=["GET", "POST"])
+@app.route("/change_password", methods=["GET", "PUT"])
 @login_required
 def change_password():
     # password = request.form.get("password")
     # new_password = request.form.get("new_password")
     # new_confirm = request.form.get("new_confirm")
 
-    if request.method == "POST":
+    if request.method == "PUT":
 
         print("hoi")
 
@@ -487,14 +502,11 @@ def leaderboards_timeattack():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Register the user"""
-
-    # Forget any user_id
-    session.clear()
+    """Register user"""
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-        
+
         # Ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username", 400)
@@ -506,7 +518,7 @@ def register():
         # Ensure password was submitted
         elif not request.form.get("password"):
             return apology("must provide password", 400)
-        
+
         # Password must match the regex pattern
         elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("password")):
             return apology("invalid password format", 400)
@@ -518,7 +530,7 @@ def register():
         # If passwords do not match, show error
         elif not request.form.get("confirmation") == request.form.get("password"):
             return apology("passwords must match", 400)
-       
+
         # Check if username is taken
         answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = request.form.get("username"))
         if len(answer) > 0:
@@ -527,7 +539,7 @@ def register():
         # Query: insert values in database
         scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :password)", username = request.form.get("username"), password=generate_password_hash(request.form.get("password")))
         scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
-        scrivdb.execute("INSERT INTO timeattack (username) VALUES(:username)", username=request.form.get("username")) 
+        scrivdb.execute("INSERT INTO timeattack (username) VALUES(:username)", username=request.form.get("username"))
 
         # Redirect user to home page
         return redirect("/")
@@ -535,6 +547,52 @@ def register():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("register.html")
+
+
+    # """Register the user"""
+
+    # # Forget any user_id
+    # session.clear()
+
+    # # User reached route via POST (as by submitting a form via POST)
+    # if request.method == "POST":
+
+    #     # Ask user to input username
+    #     if not request.form.get("username"):
+    #         return apology("must input username", 400)
+
+    #     # Ask user to input password
+    #     elif not request.form.get("password"):
+    #         return apology("must input password", 400)
+
+    #     # Password must be at least 7 characters long
+    #     if len(request.form.get("password")) < 7:
+    #         return apology("password must be at least 7 characters long", 400)
+
+    #     # If passwords do not match, show error
+    #     elif not request.form.get("confirmation") == request.form.get("password"):
+    #         return apology("passwords must match", 400)
+
+    #     # Register username and hashed password and insert new member into statistics page
+    #     registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
+    #     scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
+
+    #     # If username already exists, show error
+    #     if not registration:
+    #         return apology("username already exists, choose another", 400)
+
+    #     # Get the registered users id
+    #     user_id = scrivdb.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
+
+    #     # Remember that the user has logged in
+    #     session["user_id"] = user_id[0]["id"]
+
+    #     # Redirect user to home page
+    #     return redirect("/login")
+
+    # # User reached route via GET (as by clicking a link or via redirect)
+    # else:
+    #     return render_template("register.html") 
 
 def errorhandler(e):
     """Handle error"""

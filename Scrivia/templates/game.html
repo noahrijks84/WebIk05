@@ -49,6 +49,7 @@
         <div id="gamearea">
             <button class="buttonsquare" id="startbutton">Start Game!</button>
             <p id="answers"></p>
+            <p id="playerdata"></p>
             <p id="pointsdata"></p>
             <input type="button" value="" id="myButton1" class="buttongeneral"></input> 
             <input type="button" value="" id="myButton2" class="buttongeneral"></input> 
@@ -68,7 +69,7 @@
     // removing a player from the lobby on a page reload
     window.onbeforeunload = function(event)
     {
-        $.get('/leaverequest')
+        $.get('/leaverequest');
     };
 
     // getting the canvas data
@@ -83,18 +84,32 @@
     // sending a rewuest to join the lobby
     socket.emit('joinrequest');
 
+    // display warning if no lobby is found
+    socket.on('nolobby', function(){
+        document.getElementById("question").innerHTML = ("You are not in a lobby, go back to the home page to join one");
+    });
+
     // making the answer buttons dissapear
     document.getElementById("myButton1").style.display = "none";
     document.getElementById("myButton2").style.display = "none";
     document.getElementById("myButton3").style.display = "none";
     document.getElementById("myButton4").style.display = "none";
 
+    // update the playercount in the lobby
+    socket.on('playerupdate', function(amount){
+        playercount = amount
+        document.getElementById("playerdata").innerHTML = ("Current player(s): " + playercount);
+    });
+
     socket.on('fase1', function(host, hostdata, pointsdata){
+        // remove the start button
+        document.getElementById("startbutton").disabled = true;
+        document.getElementById("startbutton").style.display = "none";
         
         // clearing the canvas
         ctx.clearRect(0, 0, 2000, 2000);
 
-        // clearing the buttons and makeing them dissapear (again)
+        // clearing the buttons and making them dissapear (again)
         document.getElementById("myButton1").value=("");
         document.getElementById("myButton2").value=("");
         document.getElementById("myButton3").value=("");
@@ -210,9 +225,13 @@
 
     document.getElementById("startbutton").addEventListener("click", function(){
         // calling the game function and disabling the start button
-        socket.emit('startgame');
-        document.getElementById("startbutton").disabled = true;
-        document.getElementById("startbutton").style.display = "none";
+
+        if(playercount < 2){
+            alert("There need to be at least 2 players in the lobby!")
+        }
+        else{
+            socket.emit('startgame');
+        }
     });
 
     socket.on('user message', function(message){
