@@ -49,11 +49,17 @@ current_hosts = {}
 def on_pageleave():
     username = session["username"]
     if username in current_users:
+        room = current_users[username][0]
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
         current_users[username][3] = None
         current_users[username][4] = 0
+
+        message = username + " has left the game"
+        lobby_players = [k for k,v in current_users.items() if v[0] == room]
+        socketio.emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+        socketio.emit('user message', message, broadcast=True, room=room)
     return jsonify(True)
 
 # Removing the user from the lobby when navigating to the lobby page
@@ -88,6 +94,15 @@ def on_join_request():
         lobby = current_users[username][0]
         if lobby != None:
             join_room(lobby)
+            room = lobby
+            lobby_players = [k for k,v in current_users.items() if v[0] == room]
+            message = username + " has joined the game"
+            emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+            emit('user message', message, broadcast=True, room=room)
+        else:
+            emit("nolobby")
+    else:
+        emit("nolobby")
 
 # Requesting a question from the api
 def get_questions(category, type):
