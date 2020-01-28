@@ -24,7 +24,7 @@
 
     </head>
 
-    <body onload="InitThis();">
+    <body>
 
         <nav class="navbar navbar-expand-md">
             <a class="navbar-brand" href="/"><span class="white">Scrivia</span></a>
@@ -34,9 +34,10 @@
             <div class="collapse navbar-collapse" id="navbar">
                 {% if session.user_id %}
                     <ul class="navbar-nav mr-auto mt-2">
-                        <li class="nav-item"><a class="nav-link buttongeneral" href="/leaderboards">Leaderboards</a></li>
+                        <li class="nav-item"><a class="nav-link buttongeneral" href="/choose_leaderboards">Leaderboards</a></li>
                     </ul>
                     <ul class="navbar-nav ml-auto mt-2">
+                        <li class="nav-item"><a class="nav-link buttongeneral" href="/change_password">Change Password</a></li>
                         <li class="nav-item"><a class="nav-link buttongeneral" href="/logout">Log Out</a></li>
                     </ul>
                 {% else %}
