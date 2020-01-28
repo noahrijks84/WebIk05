@@ -625,29 +625,10 @@
 	    		plugin.create_button.call(currentCanvas,currentCanvas.$brushToolbox[0],"toggle",{"icon":"mdi mdi-magnify mdi-24px"}).on("touchstart.drawr mousedown.drawr",function(){
 	    			currentCanvas.$zoomToolbox.toggle();
 	    		});	    		
-	    		currentCanvas.$undoButton=plugin.create_button.call(currentCanvas,currentCanvas.$brushToolbox[0],"action",{"icon":"mdi mdi-undo-variant mdi-24px"}).on("touchstart.drawr mousedown.drawr",function(){
-				    if(currentCanvas.undoStack.length>0){
-						if(currentCanvas.undoStack[currentCanvas.undoStack.length-1].current==true){
-							currentCanvas.undoStack.pop();//ignore current version of canvas
-						}
-						$.each(currentCanvas.undoStack,function(i,stackitem){
-							stackitem.current=false;
-						});
-						if(currentCanvas.undoStack.length==0) return;
-						var undo = currentCanvas.undoStack.pop().data;
-						var img = document.createElement("img");
-						img.crossOrigin = "Anonymous";
-
-						img.onload = function(){
-							currentCanvas.plugin.initialize_canvas.call(currentCanvas,img.width,img.height,false);
-							context.drawImage(img,0,0);
-						};
-						img.src=undo;
-						if(currentCanvas.undoStack.length==0) {//don't allow stack to be emtpy.
-							currentCanvas.$undoButton.css("opacity",0.5);
-							currentCanvas.undoStack.push({data:undo,current:false});
-						}
-					}
+	    		currentCanvas.$undoButton=plugin.create_button.call(currentCanvas,currentCanvas.$brushToolbox[0],"action",{"icon":"mdi mdi-alpha-c-box-outline mdi-24px"}).on("touchstart.drawr mousedown.drawr",function(){
+				    var myCanvas = document.getElementById('canvas1');
+    				var ctx = myCanvas.getContext('2d');
+					ctx.clearRect(0, 0, 2000, 2000);
 	    		});
 	    		currentCanvas.$undoButton.css("opacity",0.5);
 				//color dialog

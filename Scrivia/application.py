@@ -22,12 +22,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
 import json
 
-# Configure application
+# configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
 
-# Ensure responses aren't cached
+# ensure responses aren't cached
 @app.after_request
 def after_request(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -35,7 +35,7 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-# Configure CS50 Library to use SQLite database
+# configure CS50 Library to use SQLite database
 trivdb = SQL("sqlite:///trivdb.db")
 scrivdb = SQL("sqlite:///scrivia.db")
 
@@ -43,20 +43,27 @@ current_users = {}
 correct_answers = {}
 current_hosts = {}
 
-# Removing the user from the lobby when closing/reloading the tab
+# removing the user from the lobby when closing/reloading the tab
 @app.route("/leaverequest")
 @login_required
 def on_pageleave():
     username = session["username"]
     if username in current_users:
+        print(username)
+        room = current_users[username][0]
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
         current_users[username][3] = None
         current_users[username][4] = 0
+
+        message = username + " has left the game"
+        lobby_players = [k for k,v in current_users.items() if v[0] == room]
+        socketio.emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+        socketio.emit('user message', message, broadcast=True, room=room)
     return jsonify(True)
 
-# Removing the user from the lobby when navigating to the lobby page
+# removing the user from the lobby when navigating to the lobby page
 @socketio.on('leaverequest')
 @login_required
 def on_leave_request():
@@ -68,12 +75,11 @@ def on_leave_request():
         current_users[username][3] = None
         current_users[username][4] = 0
 
-# Adding the playerr to the chosen lobby
+# adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
 def on_lobby_request(lobby, category, gamemode):
     username = session["username"]
-    print(category)
     join_room(lobby)
     hearts = 0
     current_users[username] = [lobby, 0, category, gamemode, hearts]
@@ -82,14 +88,23 @@ def on_lobby_request(lobby, category, gamemode):
 @socketio.on('joinrequest')
 @login_required
 def on_join_request():
-    print(current_users)
     username = session["username"]
     if username in current_users:
         lobby = current_users[username][0]
         if lobby != None:
             join_room(lobby)
+            room = lobby
+            lobby_players = [k for k,v in current_users.items() if v[0] == room]
+            message = username + " has joined the game"
+            emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+            emit('user message', message, broadcast=True, room=room)
+        else:
+            emit("nolobby")
+    else:
+        emit("nolobby")
+        
 
-# Requesting a question from the api
+# requesting a question from the api
 def get_questions(amount, category):
     import requests
     url = 'https://opentdb.com/api.php'
@@ -99,7 +114,7 @@ def get_questions(amount, category):
     json_response = response.json()['results']
     return json_response
     
-# Making the question usable in terms of format
+# making the question usable in terms of format
 def call_question(cate):
     question = get_questions(1, cate)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
@@ -108,7 +123,7 @@ def call_question(cate):
     else:
         return question
 
-# Running a game for players inside the specific lobby
+# running a game for players inside the specific lobby
 @socketio.on('startgame')
 @login_required
 def game_start():
@@ -165,10 +180,8 @@ def game_start():
                 # emitting a request to register the user points
                 emit("pointsregister", (username, points, category))
 
-        print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
     time.sleep(10)
-
 
 ############
 #
@@ -219,18 +232,8 @@ def TimeAttack_start():
             category = current_users[player][2]
 
             emit("pointsregister", (username, points, category))
-            # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
-            #         points=points,
-            #         username=username)
-            # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
-            #         points=points,
-            #         username=username,
-            #         category=category)
-
-    print(player + ": " + str(current_users[player][1]))
     current_users[player][1] = 0
     time.sleep(10)
-
 
 ##################
 #
