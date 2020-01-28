@@ -1,72 +1,14 @@
 {% extends "layout.html" %}
 
 {% block title %}
-Leaderboards
+    Leaderboards TimeAttack!
 {% endblock %}
 
 {% block main %}
-<script type="text/javascript">
-    window.onload = function () {
-        document.getElementById("animals").style.display = "none";
-        document.getElementById("video_games").style.display = "none";
-        document.getElementById("comics").style.display = "none";
-        document.getElementById("celebrities").style.display = "none";
-        document.getElementById("general_knowledge").style.display = "none";
-    }
+<!-- Run the script that shows and hides category on select from the drop-down menu -->
+<script src="/static/select.categories.js"></script>
 
-    function onCategorySelect() {
-        var category = document.getElementById("categories").value;
-        if (category == "animals") {
-            document.getElementById("animals").style.display = "";
-            document.getElementById("video_games").style.display = "none";
-            document.getElementById("comics").style.display = "none";
-            document.getElementById("celebrities").style.display = "none";
-            document.getElementById("general_knowledge").style.display = "none";
-            document.getElementById("combined").style.display = "none";
-        }
-        else if (category == "video_games") {
-            document.getElementById("animals").style.display = "none";
-            document.getElementById("video_games").style.display = "";
-            document.getElementById("comics").style.display = "none";
-            document.getElementById("celebrities").style.display = "none";
-            document.getElementById("general_knowledge").style.display = "none";
-            document.getElementById("combined").style.display = "none";
-        }
-        else if (category == "comics") {
-            document.getElementById("animals").style.display = "none";
-            document.getElementById("video_games").style.display = "none";
-            document.getElementById("comics").style.display = "";
-            document.getElementById("celebrities").style.display = "none";
-            document.getElementById("general_knowledge").style.display = "none";
-            document.getElementById("combined").style.display = "none";
-        }
-        else if (category == "celebrities") {
-            document.getElementById("animals").style.display = "none";
-            document.getElementById("video_games").style.display = "none";
-            document.getElementById("comics").style.display = "none";
-            document.getElementById("celebrities").style.display = "";
-            document.getElementById("general_knowledge").style.display = "none";
-            document.getElementById("combined").style.display = "none";
-        }
-        else if (category == "general_knowledge") {
-            document.getElementById("animals").style.display = "none";
-            document.getElementById("video_games").style.display = "none";
-            document.getElementById("comics").style.display = "none";
-            document.getElementById("celebrities").style.display = "none";
-            document.getElementById("general_knowledge").style.display = "";
-            document.getElementById("combined").style.display = "none";
-        }
-        else {
-            document.getElementById("animals").style.display = "none";
-            document.getElementById("video_games").style.display = "none";
-            document.getElementById("comics").style.display = "none";
-            document.getElementById("celebrities").style.display = "none";
-            document.getElementById("general_knowledge").style.display = "none";
-            document.getElementById("combined").style.display = "";
-        }
-    }
-</script>
-
+<!-- Select which category you want to show the leaderboards of -->
 <form action="/leaderboards" method="post">
     <select id="categories" onchange='onCategorySelect()'>
         <option disabled selected value>Category</option>
@@ -75,9 +17,10 @@ Leaderboards
         <option value="video_games">Video Games</option>
         <option value="celebrities">Celebrities</option>
         <option value="comics">Comics</option>
-        <option value="general_knowledge">General Knowledge</option> -->
+        <option value="general_knowledge">General Knowledge</option>
     </select>
 
+    <!-- Show the tables of each category (only shown when selected) -->
     <body>
         <form id="form1">
             <table id="combined" align="center">

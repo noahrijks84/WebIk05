@@ -1,3 +1,15 @@
+"""
+****************************************************************************
+ * SCRIVIA - DRAWING AND TRIVIA GAME
+ * applications.py
+ *
+ * Webprogrammeren en Databases IK
+ * Sava Arbutina, Noah Milidragović, Rogier Wesseling, Nick Duijm
+ *
+ * The controller for our game SCRIVIA, where you can draw and answer trivia.
+****************************************************************************
+"""
+
 import os
 from cs50 import SQL
 import time, random
@@ -7,7 +19,7 @@ from flask_socketio import SocketIO, emit, send, join_room, leave_room, rooms
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import apology, login_required, lookup, usd
+from helpers import apology, login_required
 import json
 import re
 import logging
@@ -37,6 +49,7 @@ current_users = {}
 correct_answers = {}
 current_hosts = {}
 
+# Removing the user from the lobby when closing/reloading the tab
 @app.route("/leaverequest")
 @login_required
 def on_pageleave():
@@ -45,8 +58,11 @@ def on_pageleave():
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
+        current_users[username][3] = None
+        current_users[username][4] = 0
     return jsonify(True)
 
+# Removing the user from the lobby when navigating to the lobby page
 @socketio.on('leaverequest')
 @login_required
 def on_leave_request():
@@ -55,15 +71,20 @@ def on_leave_request():
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
+        current_users[username][3] = None
+        current_users[username][4] = 0
 
+# Adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
-def on_lobby_request(lobby, category):
+def on_lobby_request(lobby, category, gamemode):
     username = session["username"]
     print(category)
     join_room(lobby)
-    current_users[username] = [lobby, 0, category]
+    hearts = 0
+    current_users[username] = [lobby, 0, category, gamemode, hearts]
 
+# readding the user to the chosen lobby when entering the game page
 @socketio.on('joinrequest')
 @login_required
 def on_join_request():
@@ -73,12 +94,8 @@ def on_join_request():
         lobby = current_users[username][0]
         if lobby != None:
             join_room(lobby)
-        else:
-            return redirect("/")
-    else:
-        return redirect("/")
 
-
+# Requesting a question from the api
 def get_questions(amount, category):
     import requests
     url = 'https://opentdb.com/api.php'
@@ -88,63 +105,144 @@ def get_questions(amount, category):
     json_response = response.json()['results']
     return json_response
     
-
-def call_question_gk():
-    question = get_questions(1, 27)[0]
+# Making the question usable in terms of format
+def call_question(cate):
+    question = get_questions(1, cate)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
-    print(intlist)
     if len(intlist) >= 1:
-        return call_question_gk()
+        return call_question(cate)
     else:
         return question
 
+# Running a game for players inside the specific lobby
 @socketio.on('startgame')
 @login_required
 def game_start():
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
-    print(lobby_players)
 
+    # iterating thru the players in the lobby
     for host in lobby_players:
-        triv = call_question_gk()
+        catlook = current_users[username][2]
+
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+                            '27', '15', '26', '29', '9']
+
+        for cat in range(int(len(category_list) / 2.0)):
+            if category_list[cat] == catlook:
+                category = category_list[cat + 5]
+
+        triv = call_question(category)
         correct = triv['correct_answer']
         question = triv["question"]
-        answers = triv["incorrect_answer"]
+        answers = triv["incorrect_answers"]
         answers.append(correct)
         random.shuffle(answers)
 
         current_hosts[room] = host
         correct_answers[room] = correct
 
+        # formatting data to display with the host player
         hostdata = question + " answer: " + correct
 
-        emit('fase1', (host, hostdata), broadcast=True, room=room)
+        # getting the current amount of points to display
+        pointsdata = current_users[username][1]
+
+        # letting javascript run the drawing fase at the client
+        emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
         time.sleep(10)
 
+        # letting javascript run the guessing fase at the client
         emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
         time.sleep(10)
 
+    # letting javascript run the endfase of the game finishing everything up
     emit('endfase', broadcast=True)
+    # iterating thru players left in te lobby
     for player in lobby_players:
         if player in current_users:
             if current_users[player][0] == room:
+                # clearing all the player data
                 username = player
                 points = current_users[player][1]
                 category = current_users[player][2]
 
+                # emitting a request to register the user points
                 emit("pointsregister", (username, points, category))
-                # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
-                #         points=points,
-                #         username=username)
-                # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
-                #         points=points,
-                #         username=username,
-                #         category=category)
 
         print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
     time.sleep(10)
+
+
+############
+#
+# TimeAttack
+#
+############
+
+@socketio.on('startTimeAttack')
+@login_required
+def TimeAttack_start():
+    username = session["username"]
+    room = current_users[username][0]
+    lobby_players = [k for k,v in current_users.items() if v[0] == room]
+    current_users[username][4] = 3
+    timeout = 20
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        if current_users[username][4] <= 0:
+            break
+        print("you have", current_users[username][4], "lives")
+        catlook = current_users[username][2]
+        print("CATEGORY =", catlook)
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+                            '27', '15', '26', '29', '9']
+        for cat in range(int(len(category_list) / 2.0)):
+            if category_list[cat] == catlook:
+                category = category_list[cat + 5]
+        triv = call_question(category)
+        correct = triv['correct_answer']
+        question = triv["question"]
+        answers = triv["incorrect_answers"]
+        answers.append(correct)
+        random.shuffle(answers)
+        correct_answers[room] = correct
+
+        pointsdata = current_users[username][1]
+        print('pointsdata = ', pointsdata)
+
+        emit('newround', (answers, question, correct), broadcast=True, room=room)
+        time.sleep(10)
+    print("time's up!")
+    emit('endfase', broadcast=True)
+    player = lobby_players[0]
+    if player in current_users:
+        if current_users[player][0] == room:
+            username = player
+            points = current_users[player][1]
+            category = current_users[player][2]
+
+            emit("pointsregister", (username, points, category))
+            # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
+            #         points=points,
+            #         username=username)
+            # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
+            #         points=points,
+            #         username=username,
+            #         category=category)
+
+    print(player + ": " + str(current_users[player][1]))
+    current_users[player][1] = 0
+    time.sleep(10)
+
+
+##################
+#
+# einde TimeAttack
+#
+##################
 
 @app.route("/registerpoints")
 @login_required
@@ -165,8 +263,6 @@ def on_registerpoints():
 
     return jsonify(True)
     
-
-
 @socketio.on('answer')
 @login_required
 def on_answer(answer):
@@ -174,14 +270,20 @@ def on_answer(answer):
     lobby = current_users[username][0]
     if correct_answers[lobby] == answer:
         current_users[username][1] += 3
-        host = current_hosts[lobby]
-        current_users[host][1] += 1
+    else:
+        if current_users[username][3] == 'TimeAttack':
+            current_users[username][4] -= 1
+            print("you lost a life!!!")
 
+
+# emitting the picture drawn by the host
 @socketio.on('picture')
 def handle_user_picture(message):
-    emit('picture', message, broadcast=True)
+    username = session["username"]
+    room = current_users[username][0]
+    emit('picture', message, broadcast=True, room=room)
 
-
+# emitting user chat messages to other players in the room
 @socketio.on('chat message')
 @login_required
 def handle_user_chat(message):
@@ -190,6 +292,7 @@ def handle_user_chat(message):
     room = current_users[username][0]
     emit('user message', message, broadcast=True, room=room)
 
+# returning a requested player username
 @app.route("/getusername", methods=["GET"])
 @login_required
 def username():
@@ -200,10 +303,19 @@ def username():
 def index():
     return render_template("index.html")
 
+@app.route("/landing", methods=["GET"])
+def landing():
+    return render_template("landing.html")
+
 @app.route("/game", methods=["GET"])
 @login_required
 def game():
     return render_template("game.html")
+
+@app.route("/timeattack", methods=["GET"])
+@login_required
+def timeattack():
+    return render_template("timeattack.html")
 
 
 @app.route("/check", methods=["GET"])
@@ -268,24 +380,30 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-
-@app.route("/leaderboards", methods=["GET", "POST"])
+@app.route("/choose_leaderboards", methods=["GET"])
 @login_required
-def leaderboards():
-    # list of the categories to send to HTML
+def choose_leaderboards():
+    return render_template("choose_leaderboards.html")
+
+@app.route("/leaderboards_original", methods=["GET", "POST"])
+@login_required
+def leaderboards_original():
+    """Show leaderboards of top 10 ranked players for the original game mode, can also filter by categories"""
+
+    # List of the categories to send to HTML
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
-    # show the the sum of the points of all the categories
+    # Show the the sum of the points of all the categories for the original game mode
     total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
 
-    # show the points per category
+    # Show the points per category for the original game mode
     animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
     video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
     celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
     comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
     general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
 
-    return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
+    return render_template("leaderboards_original.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
 @app.route("/change_password", methods=["GET", "POST"])
@@ -341,6 +459,33 @@ def change_password():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
+@app.route("/leaderboards_timeattack", methods=["GET", "POST"])
+@login_required
+def leaderboards_timeattack():
+    """Show leaderboards of top 10 players for the TimeAttack! game mode, can filter by category"""
+
+    # List of the categories to send to HTML
+    categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
+
+    # Show the the sum of the points of all the categories for the TimeAttack! game mode
+    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM timeattack GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
+
+    # Show the points per category for the TimeAttack! game mode
+    animals_points = scrivdb.execute("SELECT animals, username FROM timeattack GROUP BY username ORDER BY animals DESC")
+    video_games_points = scrivdb.execute("SELECT video_games, username FROM timeattack GROUP BY username ORDER BY video_games DESC")
+    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM timeattack GROUP BY username ORDER BY celebrities DESC")
+    comics_points = scrivdb.execute("SELECT comics, username FROM timeattack GROUP BY username ORDER BY comics DESC")
+    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM timeattack GROUP BY username ORDER BY general_knowledge DESC")
+
+    return render_template("leaderboards_timeattack.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points, celebrities_points=celebrities_points, 
+    comics_points=comics_points, general_knowledge_points=general_knowledge_points)
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """Register the user"""
+
+    # Forget any user_id
+    session.clear()
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
@@ -386,6 +531,9 @@ def register():
 
     # Forget any user_id
     # session.clear()
+        # Register username and hashed password and insert new member into statistics page
+        registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
+        scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
 
     # # User reached route via POST (as by submitting a form via POST)
     # if request.method == "POST":

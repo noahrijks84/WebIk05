@@ -4,12 +4,12 @@
 {% endblock %}
 
 {% block title %}
-    Portofolio
+    Game
 {% endblock %}
 
 {% block main %}
     <div id="gameinfo">
-        <p id="question"></p>
+        <p id="question"></p>        
     </div>
     <div id="wrapper">
         <div id="drawing">
@@ -49,6 +49,7 @@
         <div id="gamearea">
             <button class="buttonsquare" id="startbutton">Start Game!</button>
             <p id="answers"></p>
+            <p id="pointsdata"></p>
             <input type="button" value="" id="myButton1" class="buttongeneral"></input> 
             <input type="button" value="" id="myButton2" class="buttongeneral"></input> 
             <input type="button" value="" id="myButton3" class="buttongeneral"></input> 
@@ -64,29 +65,36 @@
     
     var socket = io();
 
+    // removing a player from the lobby on a page reload
     window.onbeforeunload = function(event)
     {
         $.get('/leaverequest')
     };
 
+    // getting the canvas data
     var myCanvas = document.getElementById('canvas1');
     var ctx = myCanvas.getContext('2d');
 
+    // requesting and keeping track of the username
     $.get("/getusername", function(data){
         username = data;
     })
 
+    // sending a rewuest to join the lobby
     socket.emit('joinrequest');
 
+    // making the answer buttons dissapear
     document.getElementById("myButton1").style.display = "none";
     document.getElementById("myButton2").style.display = "none";
     document.getElementById("myButton3").style.display = "none";
     document.getElementById("myButton4").style.display = "none";
 
-    socket.on('fase1', function(host, hostdata){
+    socket.on('fase1', function(host, hostdata, pointsdata){
         
+        // clearing the canvas
         ctx.clearRect(0, 0, 2000, 2000);
 
+        // clearing the buttons and makeing them dissapear (again)
         document.getElementById("myButton1").value=("");
         document.getElementById("myButton2").value=("");
         document.getElementById("myButton3").value=("");
@@ -96,13 +104,19 @@
         document.getElementById("myButton2").style.display = "none";
         document.getElementById("myButton3").style.display = "none";
         document.getElementById("myButton4").style.display = "none";
+        
+        // displaying the current amount of points
+        document.getElementById("pointsdata").innerHTML = ("you have " + pointsdata + " points");
 
+        // checking if the player is the current host
         if (host != username) {
+            // disabling the canvas and telling other players to wait
             $("#canvas1").drawr("stop");
             document.getElementById("answers").innerHTML = ("");
             document.getElementById("question").innerHTML = ('Somebody else is drawing right now');
         }
         else{
+            // activating the drawing function and displaying the question
             $("#canvas1").drawr("start");
             document.getElementById("answers").innerHTML = ("");
             document.getElementById("question").innerHTML = (hostdata);
@@ -110,16 +124,21 @@
     });
 
     socket.on('fase2', function(host, answers, question, correct){
+        // disabling the canvas for everyone
         $("#canvas1").drawr("stop");
 
+        // adding the answers to the buttons
         document.getElementById("myButton1").value=(answers[0]);
         document.getElementById("myButton2").value=(answers[1]);
         document.getElementById("myButton3").value=(answers[2]);
         document.getElementById("myButton4").value=(answers[3]);
 
+        // showing the answers to the host
         document.getElementById("answers").innerHTML = ("");
 
+        // checking if the player is the current host
         if (host != username) {
+            // dusplaying the question and activating the buttons
             document.getElementById("question").innerHTML = (question);
             
             document.getElementById("myButton1").style.display = "inline";
@@ -128,22 +147,29 @@
             document.getElementById("myButton4").style.display = "inline";
         }
         else{
+            // sending the created drawing to the other players
             let canvas = document.getElementById('canvas1');
             let pic = canvas.toDataURL();
             socket.emit('picture', pic);
             
+            // loading in the answers and teling host to wait
             document.getElementById("answers").innerHTML = (answers);
             document.getElementById("question").innerHTML = ("The others are picking their answers now");
         }
     });
 
     socket.on('endfase', function(){
+        // resetting the start button
         document.getElementById("startbutton").disabled = false;
+        document.getElementById("startbutton").style.display = "inline";
 
+        // disabling the canvas
         $("#canvas1").drawr("stop");
         
+        // clearing the canvas
         ctx.clearRect(0, 0, 2000, 2000);
 
+        // resetting the buttons
         document.getElementById("myButton1").value=("");
         document.getElementById("myButton2").value=("");
         document.getElementById("myButton3").value=("");
@@ -154,16 +180,19 @@
         document.getElementById("myButton3").style.display = "none";
         document.getElementById("myButton4").style.display = "none";
 
+        // letting the players know the game has ended
         document.getElementById("question").innerHTML = ("The game has ended");
         document.getElementById("answers").innerHTML = ("");
     });
 
     socket.on('pointsregister', function(username, points, category){
+        // sending the data to the server to be registered
         let round_data = [username, points, category]
         $.get("/registerpoints?round_data=" + round_data)
     });
 
     socket.on('picture', function(message){
+        // loading in the picture when received
         var img = new Image;
         img.onload = function(){
             ctx.drawImage(img,0,0);
@@ -172,6 +201,7 @@
     });
 
     $('form').submit(function(e){
+        // sending chat messages to the server
         e.preventDefault();
         socket.emit('chat message', $('#chatbox').val());
         $('#chatbox').val('');
@@ -179,18 +209,23 @@
     });
 
     document.getElementById("startbutton").addEventListener("click", function(){
+        // calling the game function and disabling the start button
         socket.emit('startgame');
         document.getElementById("startbutton").disabled = true;
+        document.getElementById("startbutton").style.display = "none";
     });
 
     socket.on('user message', function(message){
+        // displaying received chat messages
         $('#messages').prepend($('<li>').text(message));
     });
 
     document.getElementById("myButton1").addEventListener("click", function(){
+        // sending the chosen answer to the server
         let answer = document.getElementById("myButton1").value
         socket.emit('answer', answer);
 
+        // disabling the answer buttons
         document.getElementById("myButton1").style.display = "none";
         document.getElementById("myButton2").style.display = "none";
         document.getElementById("myButton3").style.display = "none";
