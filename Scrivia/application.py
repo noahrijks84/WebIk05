@@ -21,11 +21,17 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
 import json
+import re
+import logging
+
 
 # Configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
+
+# show prints
+logging.basicConfig(level=logging.DEBUG)
 
 # Ensure responses aren't cached
 @app.after_request
@@ -314,25 +320,17 @@ def timeattack():
 
 @app.route("/check", methods=["GET"])
 def check():
-    """Return true if username available, else false, in JSON format"""
-    # Get username from GET
-    username = request.args.get("username")
+    
+    # retrieving username
+    username = request.args.get("username").strip()
+    
+    # retrieving existing usernames
+    answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = username)
+    
+    # checking if username existed
+    data = not len(answer) > 0
 
-    # Select all usernames from database
-    users = scrivdb.execute("SELECT username FROM users")
-
-    # Return False if username length less than 1
-    if len(username) < 1:
-        return jsonify(False)
-
-    # Return false if username exists
-    for user in users:
-        if user["username"] == username:
-            return jsonify(False)
-
-    # If username length greater than 1 and doesn't exist, return True
-    return jsonify(True)
-
+    return jsonify(data)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -418,6 +416,56 @@ def leaderboards_original():
     return render_template("leaderboards_original.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    # password = request.form.get("password")
+    # new_password = request.form.get("new_password")
+    # new_confirm = request.form.get("new_confirm")
+
+    if request.method == "POST":
+
+        # Make sure password was acknowledged
+        if not request.form.get("password"):
+            return apology("must provide old password", 400)
+
+        # Make sure new password was acknowledged
+        elif not request.form.get("new_password"):
+            return apology("must provide new password", 400)
+
+        # New password must match the regex pattern
+        elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("new_password")):
+            return apology("invalid password format", 400)
+
+        # New password must be at least 7 characters long
+        elif len(request.form.get("new_password")) < 7:
+            return apology("new password must be at least 7 characters long", 400)
+
+        # Make sure confirmation was acknowledged
+        elif not request.form.get("new_confirm"):
+            return apology("must provide confirmation", 400)
+
+        # Make sure the new password is different to the old one
+        elif request.form.get("new_password") == request.form.get("password"):
+            return apology("must provide different password", 400)
+
+        # If passwords do not match, show error
+        elif not request.form.get("new_confirm") == request.form.get("new_password"):
+            return apology("passwords must match", 400)
+
+        # Make sure password satisfies
+        password_hash = scrivdb.execute("SELECT hash FROM users WHERE id = :user", user=session["user_id"])
+        if not check_password_hash(password_hash[0]["hash"], request.form.get("password")):
+            return apology("wrong password", 400)
+
+        # Replace the old password
+        scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
+            request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
+        
+        return redirect("/")
+    else:
+        return render_template("change_password.html")
+
 @app.route("/leaderboards_timeattack", methods=["GET", "POST"])
 @login_required
 def leaderboards_timeattack():
@@ -448,45 +496,47 @@ def register():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-
-        # Ask user to input username
+        
+        # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must input username", 400)
+            return apology("must provide username", 400)
 
-        # Ask user to input password
+        # if username contains whitespace at the beginning or end
+        elif re.search(r"^\s|\s$", request.form.get("username")):
+            return apology("invalid username format", 400)
+
+        # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must input password", 400)
+            return apology("must provide password", 400)
+        
+        # Password must match the regex pattern
+        elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("password")):
+            return apology("invalid password format", 400)
 
         # Password must be at least 7 characters long
-        if len(request.form.get("password")) < 7:
+        elif len(request.form.get("password")) < 7:
             return apology("password must be at least 7 characters long", 400)
 
         # If passwords do not match, show error
         elif not request.form.get("confirmation") == request.form.get("password"):
             return apology("passwords must match", 400)
+       
+        # Check if username is taken
+        answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = request.form.get("username"))
+        if len(answer) > 0:
+            return apology("username was already taken", 403)
 
-        # Register username and hashed password and insert new member into statistics page
-        registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
+        # Query: insert values in database
+        scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :password)", username = request.form.get("username"), password=generate_password_hash(request.form.get("password")))
         scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
-
-        # If username already exists, show error
-        if not registration:
-            return apology("username already exists, choose another", 400)
-
-        # Get the registered users id
-        user_id = scrivdb.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
-
-        # Remember that the user has logged in
-        session["user_id"] = user_id[0]["id"]
+        scrivdb.execute("INSERT INTO timeattack (username) VALUES(:username)", username=request.form.get("username")) 
 
         # Redirect user to home page
-        return redirect("/login")
+        return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("register.html")
-
- 
 
 def errorhandler(e):
     """Handle error"""
