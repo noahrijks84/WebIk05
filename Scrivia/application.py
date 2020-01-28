@@ -90,22 +90,26 @@ def on_join_request():
             join_room(lobby)
 
 # Requesting a question from the api
-def get_questions(amount, category):
+def get_questions(category, type):
     import requests
     url = 'https://opentdb.com/api.php'
-    parameters = {'amount': amount, 'type': 'multiple', 'category': category, 'difficulty' : 'easy'}
+    if type == 'timeattack':
+        parameters = {'amount': '1', 'type': 'multiple', 'category': category}
+    elif type == 'regular':
+        parameters = {'amount': '1', 'type': 'multiple', 'category': category, 'difficulty': 'easy'}
     response = requests.get(url, params=parameters)
     response.raise_for_status()
     json_response = response.json()['results']
     return json_response
     
 # Making the question usable in terms of format
-def call_question(cate):
-    question = get_questions(1, cate)[0]
+def call_question(cate, diff, questionset):
+    question = get_questions(cate, diff)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
-    if len(intlist) >= 1:
-        return call_question(cate)
+    if len(intlist) >= 1 or question['correct_answer'] in questionset:
+        return call_question(cate, diff, questionset)
     else:
+        print(questionset)
         return question
 
 # Running a game for players inside the specific lobby
@@ -115,19 +119,19 @@ def game_start():
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
-
+    questionset = set()
     # iterating thru the players in the lobby
     for host in lobby_players:
         catlook = current_users[username][2]
 
-        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+        category_list = ['any','animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
-        triv = call_question(category)
+        triv = call_question(category, 'regular', questionset)
         correct = triv['correct_answer']
         question = triv["question"]
         answers = triv["incorrect_answers"]
@@ -136,6 +140,8 @@ def game_start():
 
         current_hosts[room] = host
         correct_answers[room] = correct
+
+        questionset.add(correct)
 
         # formatting data to display with the host player
         hostdata = question + " answer: " + correct
@@ -170,12 +176,6 @@ def game_start():
     time.sleep(10)
 
 
-############
-#
-# TimeAttack
-#
-############
-
 @socketio.on('startTimeAttack')
 @login_required
 def TimeAttack_start():
@@ -183,33 +183,39 @@ def TimeAttack_start():
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
     current_users[username][4] = 3
-    timeout = 20
+    
+    questionset = set()
+    timeout = 90
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
+
         if current_users[username][4] <= 0:
             break
-        print("you have", current_users[username][4], "lives")
+        lives = current_users[username][4]
         catlook = current_users[username][2]
-        print("CATEGORY =", catlook)
+
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
-        triv = call_question(category)
+
+        triv = call_question(category, 'timeattack', questionset)
+
         correct = triv['correct_answer']
         question = triv["question"]
         answers = triv["incorrect_answers"]
+
         answers.append(correct)
         random.shuffle(answers)
         correct_answers[room] = correct
+        
+        questionset.add(correct)
 
         pointsdata = current_users[username][1]
-        print('pointsdata = ', pointsdata)
 
-        emit('newround', (answers, question, correct), broadcast=True, room=room)
-        time.sleep(10)
-    print("time's up!")
+        emit('newround', (answers, question, correct, lives, pointsdata), broadcast=True, room=room)
+        time.sleep(5)
     emit('endfase', broadcast=True)
     player = lobby_players[0]
     if player in current_users:
@@ -219,24 +225,10 @@ def TimeAttack_start():
             category = current_users[player][2]
 
             emit("pointsregister", (username, points, category))
-            # scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
-            #         points=points,
-            #         username=username)
-            # scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
-            #         points=points,
-            #         username=username,
-            #         category=category)
 
-    print(player + ": " + str(current_users[player][1]))
     current_users[player][1] = 0
     time.sleep(10)
 
-
-##################
-#
-# einde TimeAttack
-#
-##################
 
 @app.route("/registerpoints")
 @login_required
@@ -267,7 +259,6 @@ def on_answer(answer):
     else:
         if current_users[username][3] == 'TimeAttack':
             current_users[username][4] -= 1
-            print("you lost a life!!!")
 
 
 # emitting the picture drawn by the host
