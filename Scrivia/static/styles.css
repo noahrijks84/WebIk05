@@ -264,6 +264,15 @@ meter {
       text-align: center;
       display: inline-block;
   }
+
+  #new-password-feedback{
+      width: 200px;
+      margin-top: 5px;
+      color: white;
+      text-align: center;
+      display: inline-block;     
+  }
+  
   meter[value="0"] + #password-strength-text{ color: white}
   meter[value="1"] + #password-strength-text{ color: red; }
   meter[value="2"] + #password-strength-text{ color: yellow; }

@@ -415,6 +415,8 @@ def change_password():
 
     if request.method == "POST":
 
+        print("hoi")
+
         # Make sure password was acknowledged
         if not request.form.get("password"):
             return apology("must provide old password", 400)
@@ -443,15 +445,21 @@ def change_password():
         elif not request.form.get("new_confirm") == request.form.get("new_password"):
             return apology("passwords must match", 400)
 
+        print("hoi")
+
         # Make sure password satisfies
         password_hash = scrivdb.execute("SELECT hash FROM users WHERE id = :user", user=session["user_id"])
         if not check_password_hash(password_hash[0]["hash"], request.form.get("password")):
             return apology("wrong password", 400)
 
+        print("hoi")
+
         # Replace the old password
-        scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
+        result = scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
             request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
-        
+        print(result)
+        print("hoi")
+
         return redirect("/")
     else:
         return render_template("change_password.html")
