@@ -22,12 +22,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
 import json
 
-# Configure application
+# configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
 
-# Ensure responses aren't cached
+# ensure responses aren't cached
 @app.after_request
 def after_request(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -35,7 +35,7 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-# Configure CS50 Library to use SQLite database
+# configure CS50 Library to use SQLite database
 trivdb = SQL("sqlite:///trivdb.db")
 scrivdb = SQL("sqlite:///scrivia.db")
 
@@ -43,20 +43,27 @@ current_users = {}
 correct_answers = {}
 current_hosts = {}
 
-# Removing the user from the lobby when closing/reloading the tab
+# removing the user from the lobby when closing/reloading the tab
 @app.route("/leaverequest")
 @login_required
 def on_pageleave():
     username = session["username"]
     if username in current_users:
+        print(username)
+        room = current_users[username][0]
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
         current_users[username][3] = None
         current_users[username][4] = 0
+
+        message = username + " has left the game"
+        lobby_players = [k for k,v in current_users.items() if v[0] == room]
+        socketio.emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+        socketio.emit('user message', message, broadcast=True, room=room)
     return jsonify(True)
 
-# Removing the user from the lobby when navigating to the lobby page
+# removing the user from the lobby when navigating to the lobby page
 @socketio.on('leaverequest')
 @login_required
 def on_leave_request():
@@ -68,12 +75,11 @@ def on_leave_request():
         current_users[username][3] = None
         current_users[username][4] = 0
 
-# Adding the playerr to the chosen lobby
+# adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
 def on_lobby_request(lobby, category, gamemode):
     username = session["username"]
-    print(category)
     join_room(lobby)
     hearts = 0
     current_users[username] = [lobby, 0, category, gamemode, hearts]
@@ -82,56 +88,61 @@ def on_lobby_request(lobby, category, gamemode):
 @socketio.on('joinrequest')
 @login_required
 def on_join_request():
-    print(current_users)
     username = session["username"]
     if username in current_users:
         lobby = current_users[username][0]
         if lobby != None:
             join_room(lobby)
+            room = lobby
+            lobby_players = [k for k,v in current_users.items() if v[0] == room]
+            message = username + " has joined the game"
+            emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+            emit('user message', message, broadcast=True, room=room)
+        else:
+            emit("nolobby")
+    else:
+        emit("nolobby")
+        
 
-# Requesting a question from the api
-def get_questions(category, type):
+# requesting a question from the api
+def get_questions(amount, category):
     import requests
     url = 'https://opentdb.com/api.php'
-    if type == 'timeattack':
-        parameters = {'amount': '1', 'type': 'multiple', 'category': category}
-    elif type == 'regular':
-        parameters = {'amount': '1', 'type': 'multiple', 'category': category, 'difficulty': 'easy'}
+    parameters = {'amount': amount, 'type': 'multiple', 'category': category, 'difficulty' : 'easy'}
     response = requests.get(url, params=parameters)
     response.raise_for_status()
     json_response = response.json()['results']
     return json_response
     
-# Making the question usable in terms of format
-def call_question(cate, diff, questionset):
-    question = get_questions(cate, diff)[0]
+# making the question usable in terms of format
+def call_question(cate):
+    question = get_questions(1, cate)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
-    if len(intlist) >= 1 or question['correct_answer'] in questionset:
-        return call_question(cate, diff, questionset)
+    if len(intlist) >= 1:
+        return call_question(cate)
     else:
-        print(questionset)
         return question
 
-# Running a game for players inside the specific lobby
+# running a game for players inside the specific lobby
 @socketio.on('startgame')
 @login_required
 def game_start():
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
-    questionset = set()
+
     # iterating thru the players in the lobby
     for host in lobby_players:
         catlook = current_users[username][2]
 
-        category_list = ['any','animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
-        triv = call_question(category, 'regular', questionset)
+        triv = call_question(category)
         correct = triv['correct_answer']
         question = triv["question"]
         answers = triv["incorrect_answers"]
@@ -140,8 +151,6 @@ def game_start():
 
         current_hosts[room] = host
         correct_answers[room] = correct
-
-        questionset.add(correct)
 
         # formatting data to display with the host player
         hostdata = question + " answer: " + correct
@@ -171,10 +180,14 @@ def game_start():
                 # emitting a request to register the user points
                 emit("pointsregister", (username, points, category))
 
-        print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
     time.sleep(10)
 
+############
+#
+# TimeAttack
+#
+############
 
 @socketio.on('startTimeAttack')
 @login_required
@@ -183,39 +196,33 @@ def TimeAttack_start():
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
     current_users[username][4] = 3
-    
-    questionset = set()
-    timeout = 90
+    timeout = 20
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
-
         if current_users[username][4] <= 0:
             break
-        lives = current_users[username][4]
+        print("you have", current_users[username][4], "lives")
         catlook = current_users[username][2]
-
+        print("CATEGORY =", catlook)
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
-
-        triv = call_question(category, 'timeattack', questionset)
-
+        triv = call_question(category)
         correct = triv['correct_answer']
         question = triv["question"]
         answers = triv["incorrect_answers"]
-
         answers.append(correct)
         random.shuffle(answers)
         correct_answers[room] = correct
-        
-        questionset.add(correct)
 
         pointsdata = current_users[username][1]
+        print('pointsdata = ', pointsdata)
 
-        emit('newround', (answers, question, correct, lives, pointsdata), broadcast=True, room=room)
-        time.sleep(5)
+        emit('newround', (answers, question, correct), broadcast=True, room=room)
+        time.sleep(10)
+    print("time's up!")
     emit('endfase', broadcast=True)
     player = lobby_players[0]
     if player in current_users:
@@ -225,10 +232,14 @@ def TimeAttack_start():
             category = current_users[player][2]
 
             emit("pointsregister", (username, points, category))
-
     current_users[player][1] = 0
     time.sleep(10)
 
+##################
+#
+# einde TimeAttack
+#
+##################
 
 @app.route("/registerpoints")
 @login_required
@@ -259,6 +270,7 @@ def on_answer(answer):
     else:
         if current_users[username][3] == 'TimeAttack':
             current_users[username][4] -= 1
+            print("you lost a life!!!")
 
 
 # emitting the picture drawn by the host
