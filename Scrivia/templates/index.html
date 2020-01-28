@@ -27,6 +27,11 @@
                     <option value="comics">Comics</option>
                     <option value="general_knowledge">General Knowledge</option>
                 </select>
+                <select id="gamemode">
+                    <option disabled selected value>Choose Gamemode</option>
+                    <option value="regular">Regular Scrivia</option>
+                    <option value="TimeAttack">TimeAttack!</option>
+                </select>
                 <button class="buttonsquare" id="chatbutton">Join Lobby!</button>
             </form>
         </div>
@@ -40,28 +45,39 @@
     <script type="text/javascript" charset="utf-8">
     var socket = io();
     
-    // Removing user from the previous lobby if possible
+    // removing user from the previous lobby if possible
     socket.emit('leaverequest');
 
     $('#lobbyform').submit(function(e){
-        // Submitting the chosen lobby
+        // submitting the chosen lobby
         console.log("test")
         e.preventDefault(); 
         let lobbyname = $('#lobbybox').val()
         let lobbycategory = $('#categories').val()
-        // Submitting a lobbyrequest to let the server store the chosen lobby
-        socket.emit('lobbyrequest', lobbyname, lobbycategory);
-
+        let gamemode = $('#gamemode').val()
+        // submitting a lobbyrequest to let the server store the chosen lobby
+        socket.emit('lobbyrequest', lobbyname, lobbycategory, gamemode);
         $('#lobbybox').val('');
-
-        // Redirecting to the game page
-        $.ajax({
+        // redirecting to the game page
+        if (gamemode == 'regular'){
+            $.ajax({
         	type : "GET",
         	url : '/game',
         	success: function (data) {
         		window.location.href = "game"
         		}
-	    });
+	        });
+        }
+        else{
+            $.ajax({
+        	type : "GET",
+        	url : '/timeattack',
+        	success: function (data) {
+        		window.location.href = "timeattack"
+        		}
+	        });
+        }
+        
     });
 
     </script>
