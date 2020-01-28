@@ -166,14 +166,14 @@ def game_start():
 
         # letting javascript run the drawing fase at the client
         emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
-        time.sleep(10)
+        time.sleep(30)
 
         # letting javascript run the guessing fase at the client
-        emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
-        time.sleep(10)
+        emit('fase2', (host, answers, question, correct, pointsdata), broadcast=True, room=room)
+        time.sleep(15)
 
     # letting javascript run the endfase of the game finishing everything up
-    emit('endfase', broadcast=True)
+    emit('endfase', pointsdata, broadcast=True)
     # iterating thru players left in te lobby
     for player in lobby_players:
         if player in current_users:
@@ -184,7 +184,7 @@ def game_start():
                 category = current_users[player][2]
 
                 # emitting a request to register the user points
-                emit("pointsregister", (username, points, category))
+                emit("pointsregister", (username, points, category, pointsdata))
 
         print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
