@@ -20,6 +20,8 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
+import re
+import logging
 import json
 
 # Configure application
@@ -321,24 +323,35 @@ def timeattack():
 @app.route("/check", methods=["GET"])
 def check():
     """Return true if username available, else false, in JSON format"""
-    # Get username from GET
-    username = request.args.get("username")
 
-    # Select all usernames from database
-    users = scrivdb.execute("SELECT username FROM users")
+    # retrieving username
+    username = request.args.get("username").strip()
 
-    # Return False if username length less than 1
-    if len(username) < 1:
-        return jsonify(False)
+    # retrieving existing usernames
+    answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = username)
 
-    # Return false if username exists
-    for user in users:
-        if user["username"] == username:
-            return jsonify(False)
+    # checking if username existed
+    data = not len(answer) > 0
 
-    # If username length greater than 1 and doesn't exist, return True
-    return jsonify(True)
+    return jsonify(data)
+    
+    # # Get username from GET
+    # username = request.args.get("username")
 
+    # # Select all usernames from database
+    # users = scrivdb.execute("SELECT username FROM users")
+
+    # # Return False if username length less than 1
+    # if len(username) < 1:
+    #     return jsonify(False)
+
+    # # Return false if username exists
+    # for user in users:
+    #     if user["username"] == username:
+    #         return jsonify(False)
+
+    # # If username length greater than 1 and doesn't exist, return True
+    # return jsonify(True)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -388,78 +401,168 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-
-@app.route("/leaderboards", methods=["GET", "POST"])
+@app.route("/choose_leaderboards", methods=["GET"])
 @login_required
-def leaderboards():
-    """Show leaderboards of top 10 ranked players in the game, can also filter by categories"""
+def choose_leaderboards():
+    return render_template("choose_leaderboards.html")
+
+@app.route("/leaderboards_classic", methods=["GET"])
+@login_required
+def leaderboards_classic_redirect():
+    return render_template("leaderboards_classic.html")
+
+@app.route("/leaderboards_timeattack", methods=["GET"])
+@login_required
+def leaderboards_timeattack_redirect():
+    return render_template("leaderboards_timeattack.html")
+
+@app.route("/leaderboards_classic", methods=["GET", "POST"])
+@login_required
+def leaderboards_classic():
+    """Show leaderboards of top 10 ranked players for the Classic game mode, can also filter by categories"""
 
     # List of the categories to send to HTML
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
-    # Show the the sum of the points of all the categories
+    # Show the the sum of the points of all the categories for the Classic game mode
     total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
 
-    # Show the points per category
+    # Show the points per category for the Classic game mode
     animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
     video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
     celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
     comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
     general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
 
-    return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
+    return render_template("leaderboards_classic.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
+@app.route("/change_password", methods=["GET", "PUT"])
+@login_required
+def change_password():
+    # password = request.form.get("password")
+    # new_password = request.form.get("new_password")
+    # new_confirm = request.form.get("new_confirm")
 
+    if request.method == "PUT":
+
+        print("hoi")
+
+        # Make sure password was acknowledged
+        if not request.form.get("password"):
+            return apology("must provide old password", 400)
+
+        # Make sure new password was acknowledged
+        elif not request.form.get("new_password"):
+            return apology("must provide new password", 400)
+
+        # New password must match the regex pattern
+        elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("new_password")):
+            return apology("invalid password format", 400)
+
+        # New password must be at least 7 characters long
+        elif len(request.form.get("new_password")) < 7:
+            return apology("new password must be at least 7 characters long", 400)
+
+        # Make sure confirmation was acknowledged
+        elif not request.form.get("new_confirm"):
+            return apology("must provide confirmation", 400)
+
+        # Make sure the new password is different to the old one
+        elif request.form.get("new_password") == request.form.get("password"):
+            return apology("must provide different password", 400)
+
+        # If passwords do not match, show error
+        elif not request.form.get("new_confirm") == request.form.get("new_password"):
+            return apology("passwords must match", 400)
+
+        print("hoi")
+
+        # Make sure password satisfies
+        password_hash = scrivdb.execute("SELECT hash FROM users WHERE id = :user", user=session["user_id"])
+        if not check_password_hash(password_hash[0]["hash"], request.form.get("password")):
+            return apology("wrong password", 400)
+
+        print("hoi")
+
+        # Replace the old password
+        result = scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
+            request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
+        print(result)
+        print("hoi")
+
+        return redirect("/")
+    else:
+        return render_template("change_password.html")
+
+@app.route("/leaderboards_timeattack", methods=["GET", "POST"])
+@login_required
+def leaderboards_timeattack():
+    """Show leaderboards of top 10 players for the TimeAttack! game mode, can filter by category"""
+
+    # List of the categories to send to HTML
+    categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
+
+    # Show the the sum of the points of all the categories for the TimeAttack! game mode
+    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM timeattack GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
+
+    # Show the points per category for the TimeAttack! game mode
+    animals_points = scrivdb.execute("SELECT animals, username FROM timeattack GROUP BY username ORDER BY animals DESC")
+    video_games_points = scrivdb.execute("SELECT video_games, username FROM timeattack GROUP BY username ORDER BY video_games DESC")
+    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM timeattack GROUP BY username ORDER BY celebrities DESC")
+    comics_points = scrivdb.execute("SELECT comics, username FROM timeattack GROUP BY username ORDER BY comics DESC")
+    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM timeattack GROUP BY username ORDER BY general_knowledge DESC")
+
+    return render_template("leaderboards_timeattack.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points, celebrities_points=celebrities_points, 
+    comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Register the user"""
-
-    # Forget any user_id
-    session.clear()
+    """Register user"""
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        # Ask user to input username
+        # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must input username", 400)
+            return apology("must provide username", 400)
 
-        # Ask user to input password
+        # if username contains whitespace at the beginning or end
+        elif re.search(r"^\s|\s$", request.form.get("username")):
+            return apology("invalid username format", 400)
+
+        # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must input password", 400)
+            return apology("must provide password", 400)
+
+        # Password must match the regex pattern
+        elif not re.search(r"^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$", request.form.get("password")):
+            return apology("invalid password format", 400)
 
         # Password must be at least 7 characters long
-        if len(request.form.get("password")) < 7:
+        elif len(request.form.get("password")) < 7:
             return apology("password must be at least 7 characters long", 400)
 
         # If passwords do not match, show error
         elif not request.form.get("confirmation") == request.form.get("password"):
             return apology("passwords must match", 400)
 
-        # Register username and hashed password and insert new member into statistics page
-        registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
+        # Check if username is taken
+        answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = request.form.get("username"))
+        if len(answer) > 0:
+            return apology("username was already taken", 403)
+
+        # Query: insert values in database
+        scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :password)", username = request.form.get("username"), password=generate_password_hash(request.form.get("password")))
         scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
-
-        # If username already exists, show error
-        if not registration:
-            return apology("username already exists, choose another", 400)
-
-        # Get the registered users id
-        user_id = scrivdb.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
-
-        # Remember that the user has logged in
-        session["user_id"] = user_id[0]["id"]
+        scrivdb.execute("INSERT INTO timeattack (username) VALUES(:username)", username=request.form.get("username"))
 
         # Redirect user to home page
-        return redirect("/login")
+        return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("register.html")
-
- 
 
 def errorhandler(e):
     """Handle error"""
