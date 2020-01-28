@@ -456,9 +456,6 @@ def change_password():
     else:
         return render_template("change_password.html")
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    """Register user"""
 @app.route("/leaderboards_timeattack", methods=["GET", "POST"])
 @login_required
 def leaderboards_timeattack():
@@ -521,60 +518,15 @@ def register():
 
         # Query: insert values in database
         scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :password)", username = request.form.get("username"), password=generate_password_hash(request.form.get("password")))
-        
+        scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
+        scrivdb.execute("INSERT INTO timeattack (username) VALUES(:username)", username=request.form.get("username")) 
+
         # Redirect user to home page
         return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("register.html")
-
-    # Forget any user_id
-    # session.clear()
-        # Register username and hashed password and insert new member into statistics page
-        registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
-        scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
-
-    # # User reached route via POST (as by submitting a form via POST)
-    # if request.method == "POST":
-
-    #     # Ask user to input username
-    #     if not request.form.get("username"):
-    #         return apology("must input username", 400)
-
-    #     # Ask user to input password
-    #     elif not request.form.get("password"):
-    #         return apology("must input password", 400)
-
-    #     # Password must be at least 7 characters long
-    #     if len(request.form.get("password")) < 7:
-    #         return apology("password must be at least 7 characters long", 400)
-
-    #     # If passwords do not match, show error
-    #     elif not request.form.get("confirmation") == request.form.get("password"):
-    #         return apology("passwords must match", 400)
-
-    #     # Register username and hashed password
-    #     registration = scrivdb.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=request.form.get("username"), hash=generate_password_hash(request.form.get("password")))
-    #     scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
-
-        
-    #     # If username already exists, show error
-    #     if not registration:
-    #         return apology("username already exists, choose another", 400)
-
-    #     # Get the registered users id
-    #     user_id = scrivdb.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
-
-    #     # Remember that the user has logged in
-    #     session["user_id"] = user_id[0]["id"]
-
-    #     # Redirect user to home page
-    #     return redirect("/login")
-
-    # # User reached route via GET (as by clicking a link or via redirect)
-    # else:
-    #     return render_template("register.html")
 
 def errorhandler(e):
     """Handle error"""
