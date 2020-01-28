@@ -21,11 +21,16 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
 import json
+import re
+import logging
 
 # Configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
+
+# show prints
+logging.basicConfig(level=logging.DEBUG)
 
 # Ensure responses aren't cached
 @app.after_request
@@ -421,14 +426,14 @@ def leaderboards():
     return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
-@app.route("/change_password", methods=["GET", "PUT"])
+@app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
     # password = request.form.get("password")
     # new_password = request.form.get("new_password")
     # new_confirm = request.form.get("new_confirm")
 
-    if request.method == "PUT":
+    if request.method == "POST":
 
         print("hoi")
 
