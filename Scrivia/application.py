@@ -387,9 +387,9 @@ def logout():
 def choose_leaderboards():
     return render_template("choose_leaderboards.html")
 
-@app.route("/leaderboards", methods=["GET", "POST"])
+@app.route("/leaderboards_original", methods=["GET", "POST"])
 @login_required
-def leaderboards():
+def leaderboards_original():
     """Show leaderboards of top 10 ranked players for the original game mode, can also filter by categories"""
 
     # List of the categories to send to HTML
@@ -405,7 +405,7 @@ def leaderboards():
     comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
     general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
 
-    return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
+    return render_template("leaderboards_original.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
 @app.route("/leaderboards_timeattack", methods=["GET", "POST"])
