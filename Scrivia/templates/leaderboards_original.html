@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
 
 {% block title %}
-Leaderboards
+    Leaderboards Original
 {% endblock %}
 
 {% block main %}
 <!-- Run the script that shows and hides category on select from the drop-down menu -->
 <script src="/static/select.categories.js"></script>
-
+<h2>Classic Leaderboards</h2>
 <!-- Select which category you want to show the leaderboards of -->
 <form action="/leaderboards" method="post">
     <select id="categories" onchange='onCategorySelect()'>
@@ -17,11 +17,10 @@ Leaderboards
         <option value="video_games">Video Games</option>
         <option value="celebrities">Celebrities</option>
         <option value="comics">Comics</option>
-        <option value="general_knowledge">General Knowledge</option> -->
+        <option value="general_knowledge">General Knowledge</option>
     </select>
 
     <!-- Show the tables of each category (only shown when selected) -->
-
     <body>
         <form id="form1">
             <table id="combined" align="center">

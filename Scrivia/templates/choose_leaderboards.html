@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block headscript %}
+{% endblock %}
+
+{% block title %}
+Choose Leaderboards
+{% endblock %}
+
+{% block main %}
+<div id="wrapper">
+    <div id="leaderboards">
+        <h1>Which leaderboards do you want to see?</h1>
+        <button class="buttongeneral" id="TimeAttack">TimeAttack!</button>
+        <button class="buttongeneral" id="classic">Classic</button>
+    </div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+    document.getElementById("classic").addEventListener("click", function(){
+        $.ajax({
+                type: "GET",
+                url: '/leaderboards_original',
+                success: function (data) {
+                    window.location.href = "leaderboards_original"
+                }
+            });
+    });
+    document.getElementById("TimeAttack").addEventListener("click", function(){
+        $.ajax({
+                type: "GET",
+                url: '/leaderboards_timeattack',
+                success: function (data) {
+                    window.location.href = "leaderboards_timeattack"
+                }
+            });
+    });
+</script>
+{% endblock %}
