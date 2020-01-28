@@ -387,6 +387,16 @@ def logout():
 def choose_leaderboards():
     return render_template("choose_leaderboards.html")
 
+@app.route("/leaderboards_original", methods=["GET"])
+@login_required
+def leaderboards_original_redirect():
+    return render_template("leaderboards_original.html")
+
+@app.route("/leaderboards_timeattack", methods=["GET"])
+@login_required
+def leaderboards_timeattack_redirect():
+    return render_template("leaderboards_timeattack.html")
+
 @app.route("/leaderboards_original", methods=["GET", "POST"])
 @login_required
 def leaderboards_original():

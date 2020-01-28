@@ -4,45 +4,36 @@
 {% endblock %}
 
 {% block title %}
-    Choose Leaderboards
+Choose Leaderboards
 {% endblock %}
 
 {% block main %}
-    <div id="wrapper">
-        <div id="customgame">
-            <h2>For which game mode do you want to see the leaderboards?</h2>
-            <form id="leaderboardsform" action="get">
-                <button class="buttonsquare" value="original">ORIGINAL</button>
-                <button class="buttonsquare" value="timeattack">TIME ATTACK</button>
-            </form>
-        </div>
+<div id="wrapper">
+    <div id="leaderboards">
+        <h1>Which leaderboards do you want to see?</h1>
+        <button class="buttongeneral" id="TimeAttack">TimeAttack!</button>
+        <button class="buttongeneral" id="classic">Classic</button>
+    </div>
+</div>
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
-    <script type="text/javascript" charset="utf-8">
-
-    $('#leaderboardsform').submit(function(e) {
-        var leaderboards = document.getElementById("original").value;
-        if (leaderboards == "original") {
-            // Redirect to the original leaderboards
-            $.ajax({
-        	type : "GET",
-        	url : '/leaderboards_original',
-        	success: function (data) {
-        		window.location.href = "leaderboards_original"
-        		}
-        });
-
-        if (leaderboards == "timeattack") {
-            // Redirect to the time attack leaderboards
-            $.ajax({
-        	type : "GET",
-        	url : '/leaderboards_timeattack',
-        	success: function (data) {
-        		window.location.href = "leaderboards_timeattack"
-        		}
-	    });
-        }
-    }});
-
-    </script>
+<script type="text/javascript" charset="utf-8">
+    document.getElementById("classic").addEventListener("click", function(){
+        $.ajax({
+                type: "GET",
+                url: '/leaderboards_original',
+                success: function (data) {
+                    window.location.href = "leaderboards_original"
+                }
+            });
+    });
+    document.getElementById("TimeAttack").addEventListener("click", function(){
+        $.ajax({
+                type: "GET",
+                url: '/leaderboards_timeattack',
+                success: function (data) {
+                    window.location.href = "leaderboards_timeattack"
+                }
+            });
+    });
+</script>
 {% endblock %}
