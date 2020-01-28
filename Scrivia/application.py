@@ -373,29 +373,62 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-
-@app.route("/leaderboards", methods=["GET", "POST"])
+@app.route("/choose_leaderboards", methods=["GET"])
 @login_required
-def leaderboards():
-    """Show leaderboards of top 10 ranked players in the game, can also filter by categories"""
+def choose_leaderboards():
+    return render_template("choose_leaderboards.html")
+
+@app.route("/leaderboards_classic", methods=["GET"])
+@login_required
+def leaderboards_classic_redirect():
+    return render_template("leaderboards_classic.html")
+
+@app.route("/leaderboards_timeattack", methods=["GET"])
+@login_required
+def leaderboards_timeattack_redirect():
+    return render_template("leaderboards_timeattack.html")
+
+@app.route("/leaderboards_classic", methods=["GET", "POST"])
+@login_required
+def leaderboards_classic():
+    """Show leaderboards of top 10 ranked players for the Classic game mode, can also filter by categories"""
 
     # List of the categories to send to HTML
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
-    # Show the the sum of the points of all the categories
+    # Show the the sum of the points of all the categories for the Classic game mode
     total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
 
-    # Show the points per category
+    # Show the points per category for the Classic game mode
     animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
     video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
     celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
     comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
     general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
 
-    return render_template("leaderboards.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
+    return render_template("leaderboards_classic.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
+@app.route("/leaderboards_timeattack", methods=["GET", "POST"])
+@login_required
+def leaderboards_timeattack():
+    """Show leaderboards of top 10 players for the TimeAttack! game mode, can filter by category"""
 
+    # List of the categories to send to HTML
+    categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
+
+    # Show the the sum of the points of all the categories for the TimeAttack! game mode
+    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM timeattack GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
+
+    # Show the points per category for the TimeAttack! game mode
+    animals_points = scrivdb.execute("SELECT animals, username FROM timeattack GROUP BY username ORDER BY animals DESC")
+    video_games_points = scrivdb.execute("SELECT video_games, username FROM timeattack GROUP BY username ORDER BY video_games DESC")
+    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM timeattack GROUP BY username ORDER BY celebrities DESC")
+    comics_points = scrivdb.execute("SELECT comics, username FROM timeattack GROUP BY username ORDER BY comics DESC")
+    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM timeattack GROUP BY username ORDER BY general_knowledge DESC")
+
+    return render_template("leaderboards_timeattack.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points, celebrities_points=celebrities_points, 
+    comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
