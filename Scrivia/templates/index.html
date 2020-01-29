@@ -13,27 +13,41 @@
     </div>
     <div id="wrapper">
         <div id="customgame">
-            <h2>Create a lobby</h2>
-            <p>Choose lobby name</p>
-            <p>If no lobby exists, one will be created</p>
-            <p>If a lobby does exist, you will join it</p>
-            <form id="lobbyform" action="">
-                <input id="lobbybox" autocomplete="off"/>
-                <select id="categories" onchange='onCategorySelect()'>
-                    <option disabled selected value>Choose Category</option>
-                    <option value="animals">Animals</option>
-                    <option value="video_games">Video Games</option>
-                    <option value="celebrities">Celebrities</option>
-                    <option value="comics">Comics</option>
-                    <option value="general_knowledge">General Knowledge</option>
-                </select>
-                <select id="gamemode">
-                    <option disabled selected value>Choose Gamemode</option>
-                    <option value="regular">Classic Scrivia</option>
-                    <option value="TimeAttack">TimeAttack!</option>
-                </select>
-                <button class="buttonsquare" id="chatbutton">Join Lobby!</button>
-            </form>
+            <div id="classic">
+                <h2>Classic Scrivia</h2>
+                <p>Choose lobby name</p>
+                <p>If no lobby exists, one will be created</p>
+                <p>If a lobby does exist, you will join it</p>
+                <form id="lobbyform" action="">
+                    <input id="lobbybox" autocomplete="off"/>
+                    <select id="categories" onchange='onCategorySelect()'>
+                        <option disabled selected value>Choose Category</option>
+                        <option value="animals">Animals</option>
+                        <option value="video_games">Video Games</option>
+                        <option value="celebrities">Celebrities</option>
+                        <option value="comics">Comics</option>
+                        <option value="general_knowledge">General Knowledge</option>
+                    </select>
+                    <button class="buttonsquare" id="chatbutton">Join Lobby!</button>
+                </form>
+            </div>
+            <div id="timeattack">
+                <h2>TimeAttack!</h2>
+                <p>Choose a category</p>
+                <p>Answer as many questions as you get</p>
+                <p>See yourself rise to the top of the leaderboard!</p>
+                <form id="timeattackform" action="">
+                    <select id="timecategories" onchange='onCategorySelect()'>
+                        <option disabled selected value>Choose Category</option>
+                        <option value="animals">Animals</option>
+                        <option value="video_games">Video Games</option>
+                        <option value="celebrities">Celebrities</option>
+                        <option value="comics">Comics</option>
+                        <option value="general_knowledge">General Knowledge</option>
+                    </select>
+                    <button class="buttonsquare" id="chatbutton">TimeAttack!</button>
+                </form>
+            </div>
         </div>
         <div id="opengame">
             <h2>Pick a lobby</h2> 
@@ -49,36 +63,45 @@
     socket.emit('leaverequest');
 
     $('#lobbyform').submit(function(e){
-        // submitting the chosen lobby
         console.log("test")
+        // submitting the chosen lobby
         e.preventDefault(); 
         let lobbyname = $('#lobbybox').val()
         let lobbycategory = $('#categories').val()
-        let gamemode = $('#gamemode').val()
+
         // submitting a lobbyrequest to let the server store the chosen lobby
-        socket.emit('lobbyrequest', lobbyname, lobbycategory, gamemode);
+        socket.emit('lobbyrequest', lobbyname, lobbycategory);
         $('#lobbybox').val('');
-        // redirecting to the game page
-        if (gamemode == 'regular'){
-            $.ajax({
-        	type : "GET",
-        	url : '/game',
-        	success: function (data) {
-        		window.location.href = "game"
-        		}
-	        });
-        }
-        else{
-            $.ajax({
+
+        $.ajax({
+        type : "GET",
+        url : '/game',
+        success: function (data) {
+            window.location.href = "game"
+            }
+        });
+        
+    });
+
+    $('#timeattackform').submit(function(e){
+        console.log("test")
+        // submitting the chosen lobby
+        e.preventDefault(); 
+        let category = $('#timecategories').val();
+        let lobbyname = null;
+
+        // submitting a lobbyrequest to let the server store the chosen lobby
+        socket.emit('lobbyrequest', lobbyname, category);
+
+        $.ajax({
         	type : "GET",
         	url : '/timeattack',
         	success: function (data) {
         		window.location.href = "timeattack"
         		}
 	        });
-        }
         
     });
-
+    
     </script>
 {% endblock %}

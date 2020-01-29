@@ -7,27 +7,51 @@
 {% block main %}
     <form action="/register" method="post">
         <div class="form-group">
-            <input oninput="checkUsername()" autocomplete="off" autofocus class="form-control" id="username" name="username" placeholder="Username" type="text">
+            <input 
+            oninput="checkUsername()" 
+            autocomplete="off" 
+            autofocus class="form-control" 
+            id="username" 
+            name="username" 
+            placeholder="Username" 
+            type="text">
             <p class="text-danger" id="username-feedback"></p>
         </div>
         <div class="form-group">
-            <input id="password" oninput="validateInput()" class="form-control" type="password" name="password" placeholder="Password">
+            <input 
+            data-toggle="tooltip"
+            data-placement="right"
+            title="Password needs to be atleast 8 characters long, must contain a number, a letter, a capital letter and a special symbol"
+            id="password" 
+            oninput="validateInput()"  
+            class="form-control" 
+            type="password" 
+            name="password" 
+            placeholder="Password">
             <meter max="4" id="password-strength-meter"></meter>
             <p id="password-strength-text"></p>
             <p id="password-feedback"></p>
         </div>
         <div class="form-group">
-            <input id="password-confirm" oninput="validateInput()" class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
+            <input 
+            id="password-confirm" 
+            oninput="validateInput()" 
+            class="form-control" 
+            type="password" 
+            name="confirmation" 
+            placeholder="Confirm Password">
             <p id="password-confirm-feedback"></p>
         </div>
         <button class="btn btn-primary" id="butn" type="submit" disabled>Register</button>
     </form>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.2.0/zxcvbn.js"></script>
     <script>
+        // Activate all tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+
         // set to false at first, but might later become true after validation
         let usernameValid = false;
         let passwordValid = false;
-        $("#password-feedback").text("Password needs to be atleast 8 characters long, must contain a number, a letter, a capital letter and a special symbol");
         
         function enableOrDisableSubmitBtn() {
             // disable submit btn if both username and password are valid

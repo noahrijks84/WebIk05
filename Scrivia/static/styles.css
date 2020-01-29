@@ -218,14 +218,31 @@ a{
     float:left;
     background-color: #FBFFFE;
     overflow-y: auto;
-    border-style: solid;
-    border-color: #2c0e37;
 }
 
 #opengame {
     height: 70vh;
     overflow-y: auto;
     background-color: #FBFFFE;
+    border-style: solid;
+    border-color: #2c0e37;
+}
+
+#classic {
+    width: 100%;
+    height: 50%;
+    float:left;
+    background-color: #FBFFFE;
+    overflow-y: auto;
+    border-style: solid;
+    border-color: #2c0e37;
+}
+
+#timeattack {
+    width: 100%;
+    height: 50%;
+    background-color: #FBFFFE;
+    overflow-y: auto;
     border-style: solid;
     border-color: #2c0e37;
 }
@@ -259,6 +276,15 @@ meter {
       text-align: center;
       display: inline-block;
   }
+
+  #new-password-feedback{
+      width: 200px;
+      margin-top: 5px;
+      color: white;
+      text-align: center;
+      display: inline-block;     
+  }
+  
   meter[value="0"] + #password-strength-text{ color: white}
   meter[value="1"] + #password-strength-text{ color: red; }
   meter[value="2"] + #password-strength-text{ color: yellow; }
@@ -303,6 +329,12 @@ table tr td:first-child::before{
     font-weight: bold;
 }
 
+form[action="/register"][method="post"] .form-group, 
+form[action="/register"][method="post"] #password-strength-text,
+form[action="/change_password"][method="post"] #new-password-strength-text {
+    margin: 0;
+}
+
 /* landing page */
 #landingcontent {
     width: 100%;
@@ -312,10 +344,8 @@ table tr td:first-child::before{
     overflow-y: auto;
 }
 
-
-
-
 /* timeattack page */
 #ta_button{
     padding: 20px;
 }
+
