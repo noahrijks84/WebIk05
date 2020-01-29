@@ -410,16 +410,6 @@ def logout():
     return redirect("/")
 
 
-@app.route("/leaderboards_classic", methods=["GET"])
-@login_required
-def leaderboards_classic_redirect():
-    return render_template("leaderboards_classic.html")
-
-@app.route("/leaderboards_timeattack", methods=["GET"])
-@login_required
-def leaderboards_timeattack_redirect():
-    return render_template("leaderboards_timeattack.html")
-
 @app.route("/leaderboards_classic", methods=["GET", "POST"])
 @login_required
 def leaderboards_classic():
@@ -444,10 +434,6 @@ def leaderboards_classic():
 @app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
-    # password = request.form.get("password")
-    # new_password = request.form.get("new_password")
-    # new_confirm = request.form.get("new_confirm")
-
     if request.method == "POST":
         # Make sure password was acknowledged
         if not request.form.get("password"):
