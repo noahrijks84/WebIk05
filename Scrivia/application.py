@@ -409,17 +409,6 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-
-@app.route("/leaderboards_classic", methods=["GET"])
-@login_required
-def leaderboards_classic_redirect():
-    return render_template("leaderboards_classic.html")
-
-@app.route("/leaderboards_timeattack", methods=["GET"])
-@login_required
-def leaderboards_timeattack_redirect():
-    return render_template("leaderboards_timeattack.html")
-
 @app.route("/leaderboards_classic", methods=["GET", "POST"])
 @login_required
 def leaderboards_classic():
