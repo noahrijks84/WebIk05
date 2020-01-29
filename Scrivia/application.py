@@ -573,7 +573,7 @@ def register():
         return render_template("register.html")
 
 
-@app.route("/profilepage", methods=["GET"])
+@app.route("/profilepage", methods=["GET", "POST"])
 @login_required
 def profilepage():
     date_joined = scrivdb.execute("SELECT date_joined FROM users WHERE username = :username",
@@ -585,8 +585,26 @@ def profilepage():
     personal_statistics_timeattack = scrivdb.execute("SELECT * FROM timeattack WHERE username = :username",
             username=session["username"])
 
+    # Retrieve dict values to send to HTML for the Classic game mode
+    points = personal_statistics_classic[0]["points"]
+    animals = personal_statistics_classic[0]["animals"]
+    video_games = personal_statistics_classic[0]["video_games"]
+    celebrities = personal_statistics_classic[0]["celebrities"]
+    comics = personal_statistics_classic[0]["comics"]
+    general_knowledge = personal_statistics_classic[0]["general_knowledge"]
+
+    # Retrieve dict values to send to HTML for the TimeAttack! game mode
+    points_timeattack = personal_statistics_timeattack[0]["points"]
+    animals_timeattack = personal_statistics_timeattack[0]["animals"]
+    video_games_timeattack = personal_statistics_timeattack[0]["video_games"]
+    celebrities_timeattack = personal_statistics_timeattack[0]["celebrities"]
+    comics_timeattack = personal_statistics_timeattack[0]["comics"]
+    general_knowledge_timeattack = personal_statistics_timeattack[0]["general_knowledge"]
+
     return render_template("profilepage.html", username=session["username"], date_joined=date_joined[0]['date_joined'], personal_statistics_classic=personal_statistics_classic,
-    personal_statistics_timeattack=personal_statistics_timeattack)
+    personal_statistics_timeattack=personal_statistics_timeattack, points=points, animals=animals, video_games=video_games, celebrities=celebrities,
+     comics=comics, general_knowledge=general_knowledge, points_timeattack=points_timeattack, animals_timeattack=animals_timeattack, video_games_timeattack=video_games_timeattack,
+     celebrities_timeattack=celebrities_timeattack, comics_timeattack=comics_timeattack, general_knowledge_timeattack=general_knowledge_timeattack)
 
 
 def errorhandler(e):

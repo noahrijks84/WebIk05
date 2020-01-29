@@ -306,9 +306,12 @@ th, td{
     color: white;
 }
 
-table
-{
+table {
     counter-reset: rowNumber;
+}
+
+.bla {
+    color: white
 }
 
 #leaderboards {
