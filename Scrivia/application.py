@@ -339,24 +339,6 @@ def check():
     data = not len(answer) > 0
 
     return jsonify(data)
-    
-    # # Get username from GET
-    # username = request.args.get("username")
-
-    # # Select all usernames from database
-    # users = scrivdb.execute("SELECT username FROM users")
-
-    # # Return False if username length less than 1
-    # if len(username) < 1:
-    #     return jsonify(False)
-
-    # # Return false if username exists
-    # for user in users:
-    #     if user["username"] == username:
-    #         return jsonify(False)
-
-    # # If username length greater than 1 and doesn't exist, return True
-    # return jsonify(True)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -484,7 +466,7 @@ def change_password():
             return apology("wrong password", 400)
 
         # Replace the old password
-        scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
+        result = scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
             request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
 
         return redirect("/")
