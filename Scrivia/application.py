@@ -155,7 +155,7 @@ def game_start(category):
 
     # iterating thru the players in the lobby
     for host in lobby_players:
-        category_list = ['any','animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
         for cat in range(int(len(category_list) / 2.0)):
