@@ -9,26 +9,26 @@
 
 {% block main %}
     <div id="indexheader">
-        <h2></h2>
+        <h2 style="color:white;">Pick your gamemode!</h2>
     </div>
     <div id="wrapper">
         <div id="customgame">
             <div id="classic">
-                <h2>Classic Scrivia</h2>
-                <p>Choose lobby name</p>
-                <p>If no lobby exists, one will be created</p>
-                <p>If a lobby does exist, you will join it</p>
-                <form id="lobbyform" action="">
+                <h2 style="color:#FAA916; margin-bottom:20px;">Classic Scrivia</h2>
+                <p style="color:white;">Choose lobby name, you can choose<br> the category in-game</pstyle="color:white;">
+                <p style="color:white;">If no lobby exists, one will be created</pstyle="color:white;">
+                <p style="color:white;">If a lobby does exist, you will join it</pstyle="color:white;">
+                <form id="lobbyform" style="margin-top:50px;" action="">
                     <input id="lobbybox" autocomplete="off"/>
                     <button class="buttonsquare" id="chatbutton">Join Lobby!</button>
                 </form>
             </div>
             <div id="timeattack">
-                <h2>TimeAttack!</h2>
-                <p>Choose a category</p>
-                <p>Answer as many questions as you get</p>
-                <p>See yourself rise to the top of the leaderboard!</p>
-                <form id="timeattackform" action="">
+                <h2 style="color:#FAA916; margin-bottom:20px;">TimeAttack!</h2>
+                <p style="color:white;">Choose a category</p>
+                <p style="color:white;">Answer as many questions as you can<br>until you run out of lives or time</p>
+                <p style="color:white;">See yourself rise to the top of the leaderboard!</p>
+                <form id="timeattackform" style="margin-top:50px;" action="">
                     <select id="timecategories" onchange='onCategorySelect()'>
                         <option disabled selected value>Choose Category</option>
                         <option value="animals">Animals</option>
@@ -40,10 +40,6 @@
                     <button class="buttonsquare" id="chatbutton">TimeAttack!</button>
                 </form>
             </div>
-        </div>
-        <div id="opengame">
-            <h2>Pick a lobby</h2> 
-            <ul id="opengames"></ul>
         </div>
     </div>
 
