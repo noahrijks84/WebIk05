@@ -7,7 +7,7 @@ Leaderboards Original
 {% block main %}
 <!-- Run the script that shows and hides category on select from the drop-down menu -->
 <script src="/static/select.categories.js"></script>
-<h2>Classic Leaderboards</h2>
+<h2 style="color:#FAA916">Classic Leaderboards</h2>
 <!-- Select which category you want to show the leaderboards of -->
 <form action="/leaderboards_classic" method="post">
     <select id="categories" onchange='onCategorySelect()'>
@@ -121,4 +121,21 @@ Leaderboards Original
         </form>
     </body>
 
+    <div id="wrapper">
+        <div id="leaderboards_bottom">
+            <button class="buttongeneral" id="TimeAttackbutton" style="margin: 100px">TimeAttack!</button>
+        </div>
+    </div>
+
+    <script type="text/javascript" charset="utf-8">
+        document.getElementById("TimeAttackbutton").addEventListener("click", function () {
+            $.ajax({
+                type: "GET",
+                url: '/leaderboards_timeattack',
+                success: function (data) {
+                    window.location.href = "leaderboards_timeattack"
+                }
+            });
+        });
+    </script>
     {% endblock %}

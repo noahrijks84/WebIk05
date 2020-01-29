@@ -42,15 +42,25 @@
 
     socket.emit('joinrequest');
 
+    // display warning if no lobby is found
+    socket.on('nolobby', function(){
+        document.getElementById("question").innerHTML = ("You reloaded the page, go back to the restart the game");
+    });
+
+    socket.on('pointsreturn', function(points){
+        document.getElementById("pointsdata").innerHTML = ("Current points: " + points);
+    });
+
+
     document.getElementById("myButton1").style.display = "none";
     document.getElementById("myButton2").style.display = "none";
     document.getElementById("myButton3").style.display = "none";
     document.getElementById("myButton4").style.display = "none";
 
-    socket.on('newround', function(answers, question, correct, lives, pointsdata){
-
+    socket.on('newround', function(answers, question, correct, lives){
+        socket.emit('pointsrequest');
+        
         document.getElementById("lives").innerHTML = ("you have " + lives + " lives");
-        document.getElementById("pointsdata").innerHTML = ("you have " + pointsdata + " points");
 
         document.getElementById("myButton1").value=(answers[0]);
         document.getElementById("myButton2").value=(answers[1]);
@@ -86,6 +96,13 @@
     socket.on('pointsregister', function(username, points, category){
         let round_data = [username, points, category]
         $.get("/registerpoints?round_data=" + round_data)
+    });
+
+    socket.on('timeup', function(){
+        document.getElementById("myButton1").style.display = "none";
+        document.getElementById("myButton2").style.display = "none";
+        document.getElementById("myButton3").style.display = "none";
+        document.getElementById("myButton4").style.display = "none";
     });
 
     document.getElementById("startbutton").addEventListener("click", function(){
