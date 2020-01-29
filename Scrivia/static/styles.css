@@ -136,6 +136,12 @@ a{
     border: 2px solid #FAA916;
 }
 
+#question{
+    color: white;
+    vertical-align: middle; 
+    font-size: 25px;
+}
+
 /* Game page */
 #drawing {
     width: 70%;
@@ -143,20 +149,24 @@ a{
     float:left;
     background-color: grey;
     overflow-y: auto;
+    border-radius: 15px 0px 15px 15px;
 }
 
 #chat {
     height: 40vh;
     overflow-y: auto;
-    border-style: solid;
     background-color: white;
+    border-radius: 0px 15px 0px 0px;
+}
+
+#categories{
+    width: 100%;
 }
 
 #gamearea {
     height: 30vh;
     overflow-y: auto;
     background-color: white;
-    border-style: solid;
 }
 
 #chatbox{
@@ -185,7 +195,9 @@ a{
 #gameinfo {
     width: 100%;
     height: 50px;
-    background-color: #FAA916;
+    background-color: #690375;
+    border-radius: 20px;
+    margin-bottom: 5px;
 }
 
 #canvas1{
@@ -212,42 +224,66 @@ a{
 #indexheader {
     width: 100%;
     height: 50px;
-    background-color: #FAA916;
+    background-color: #690375;
+    border-radius: 20px;
 }
 
 #customgame {
-    width: 70%;
+    width: 100%;
     height: 70vh;
-    float:left;
-    background-color: #FBFFFE;
     overflow-y: auto;
+    margin-top: 40px;
 }
 
-#opengame {
-    height: 70vh;
-    overflow-y: auto;
-    background-color: #FBFFFE;
-    border-style: solid;
-    border-color: #2c0e37;
-}
 
 #classic {
-    width: 100%;
-    height: 50%;
+    width: 50%;
+    height: 60%;
     float:left;
-    background-color: #FBFFFE;
+    background-color: #2c0e37;
     overflow-y: auto;
     border-style: solid;
     border-color: #2c0e37;
+    border-radius: 20px;
+    -webkit-transition-duration: 0.4s; 
+    transition-duration: 0.4s;
+}
+
+#classic:hover {
+    width: 50%;
+    height: 60%;
+    float:left;
+    background-color: #773e74;
+    overflow-y: auto;
+    border-style: solid;
+    border-color: #2c0e37;
+    border-radius: 20px;
+    -webkit-transition-duration: 0.4s; 
+    transition-duration: 0.4s;
 }
 
 #timeattack {
-    width: 100%;
-    height: 50%;
-    background-color: #FBFFFE;
+    width: 50%;
+    height: 60%;
+    background-color: #2c0e37;
     overflow-y: auto;
     border-style: solid;
     border-color: #2c0e37;
+    border-radius: 20px;
+    -webkit-transition-duration: 0.4s; 
+    transition-duration: 0.4s;
+}
+
+#timeattack:hover {
+    width: 50%;
+    height: 60%;
+    background-color: #773e74;
+    overflow-y: auto;
+    border-style: solid;
+    border-color: #2c0e37;
+    border-radius: 20px;
+    -webkit-transition-duration: 0.4s; 
+    transition-duration: 0.4s;
 }
 
 meter {
@@ -306,8 +342,7 @@ th, td{
     color: white;
 }
 
-table
-{
+.specialtable {
     counter-reset: rowNumber;
 }
 
@@ -321,11 +356,11 @@ table
     border-color: #2c0e37;
 }
 
-table tr > td:first-child{
+.specialtable tr > td:first-child{
     counter-increment: rowNumber;
 }
 
-table tr td:first-child::before{
+.specialtable tr td:first-child::before{
     content: counter(rowNumber);
     min-width: 1em;
     margin-right: 0.5em;
@@ -399,7 +434,81 @@ form[action="/change_password"][method="post"] #new-password-strength-text {
 }
 
 /* timeattack page */
-#ta_button{
-    padding: 20px;
+#gamearea {
+    height: 30vh;
+    overflow-y: auto;
+    background-color: #2c0e37;
 }
+
+.ta_button {
+    background-color: #FAA916;
+    color: white;
+    border: 2px solid #FAA916;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    width: 18%;
+    height: 50px;
+    margin: 40px 5px 40px 5px;
+    border-radius: 15px;
+}
+  
+.ta_button:hover {
+    background-color: white;
+    color: black;
+    border: 2px solid #FAA916;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    width: 18%;
+    height: 50px;
+    margin: 20px 0 20px 0;
+    border-radius: 15px;
+}
+
+#ta_startbutton{
+    width: 40%;
+    height: 60px;
+    margin-top: 40px;
+    background-color: #FAA916;
+    border: 2px solid #FAA916;
+    color: white;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    border-radius: 15px;
+}
+
+#ta_startbutton:hover{
+    width: 40%;
+    height: 60px;
+    margin-top: 40px;
+    background-color: white;
+    border: 2px solid #FAA916;
+    color: white;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    border-radius: 15px;
+}
+
+#ta_gameinfo {
+    width: 100%;
+    height: 50px;
+    background-color: #690375;
+    border-radius: 20px;
+}
+
+#lives{
+    color: white;
+}
+
+#pointsdata{
+    color: white;
+}
+
+#playerdata{
+    color: white;
+}
+
+#answers{
+    color: white;
+}
+
 

@@ -92,7 +92,6 @@ def on_lobby_request(lobby, category, gamemode):
     
     join_room(lobby)
     current_users[username] = [lobby, 0, category, hearts, gamemode]
-    print(current_users[username])
     
 
 # readding the user to the chosen lobby when entering the game page
@@ -109,7 +108,6 @@ def on_join_request():
             message = username + " has joined the game"
             emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
             emit('user message', message, broadcast=True, room=room)
-            print(current_users[username])
         else:
             emit("nolobby")
     else:
@@ -210,11 +208,11 @@ def game_start(category):
 
         # Letting javascript run the drawing fase at the client
         emit('fase1', (host, hostdata), broadcast=True, room=room)
-        time.sleep(10)
+        time.sleep(60)
 
         # Letting javascript run the guessing fase at the client
         emit('fase2', (host, all_answers, question, correct), broadcast=True, room=room)
-        time.sleep(10)
+        time.sleep(20)
 
     # Letting javascript run the endfase of the game finishing everything up
     emit('endfase', broadcast=True, room=room)
@@ -225,9 +223,10 @@ def game_start(category):
                 # Clearing all the player data
                 username = player
                 points = current_users[player][1]
+                gamemode = current_users[player][4]
 
-                # Emitting a request to register the user points
-                emit("pointsregister", (username, points, catlook))
+                # emitting a request to register the user points
+                emit("pointsregister", (username, points, catlook, gamemode))
                 current_users[player][2] = None
     time.sleep(10)
 
@@ -287,8 +286,9 @@ def TimeAttack_start():
         if current_users[username][0] == room:
             points = current_users[username][1]
             category = current_users[username][2]
+            gamemode = current_users[username][4]
 
-            emit("pointsregister", (username, points, category))
+            emit("pointsregister", (username, points, category, gamemode))
             current_users[username][1] = 0
     time.sleep(10)
 
@@ -308,14 +308,24 @@ def on_registerpoints():
     username = split_data[0]
     points = split_data[1]
     category = split_data[2]
+    gamemode = split_data[3]
 
-    scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
-            points=points,
-            username=username)
-    scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
-            points=points,
-            username=username,
-            category=category)
+    if gamemode == "classic":
+        scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
+                points=points,
+                username=username)
+        scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
+                points=points,
+                username=username,
+                category=category)
+    elif gamemode == "timeattack":
+        scrivdb.execute("UPDATE timeattack SET points = points + :points WHERE username = :username",
+                points=points,
+                username=username)
+        scrivdb.execute("UPDATE timeattack SET :category = :category + :points WHERE username = :username",
+                points=points,
+                username=username,
+                category=category)
 
     return jsonify(True)
     
@@ -324,10 +334,6 @@ def on_registerpoints():
 def on_answer(answer):
     username = session["username"]
     lobby = current_users[username][0]
-
-    print(answer)
-    print(correct_answers[lobby])
-
 
     if current_users[username][4] == 'timeattack':
         if correct_answers[lobby] == answer:
@@ -613,7 +619,7 @@ def register():
         return render_template("register.html")
 
 
-@app.route("/profilepage", methods=["GET"])
+@app.route("/profilepage", methods=["GET", "POST"])
 @login_required
 def profilepage():
     date_joined = scrivdb.execute("SELECT date_joined FROM users WHERE username = :username",
@@ -625,8 +631,26 @@ def profilepage():
     personal_statistics_timeattack = scrivdb.execute("SELECT * FROM timeattack WHERE username = :username",
             username=session["username"])
 
+    # Retrieve dict values to send to HTML for the Classic game mode
+    points = personal_statistics_classic[0]["points"]
+    animals = personal_statistics_classic[0]["animals"]
+    video_games = personal_statistics_classic[0]["video_games"]
+    celebrities = personal_statistics_classic[0]["celebrities"]
+    comics = personal_statistics_classic[0]["comics"]
+    general_knowledge = personal_statistics_classic[0]["general_knowledge"]
+
+    # Retrieve dict values to send to HTML for the TimeAttack! game mode
+    points_timeattack = personal_statistics_timeattack[0]["points"]
+    animals_timeattack = personal_statistics_timeattack[0]["animals"]
+    video_games_timeattack = personal_statistics_timeattack[0]["video_games"]
+    celebrities_timeattack = personal_statistics_timeattack[0]["celebrities"]
+    comics_timeattack = personal_statistics_timeattack[0]["comics"]
+    general_knowledge_timeattack = personal_statistics_timeattack[0]["general_knowledge"]
+
     return render_template("profilepage.html", username=session["username"], date_joined=date_joined[0]['date_joined'], personal_statistics_classic=personal_statistics_classic,
-    personal_statistics_timeattack=personal_statistics_timeattack)
+    personal_statistics_timeattack=personal_statistics_timeattack, points=points, animals=animals, video_games=video_games, celebrities=celebrities,
+     comics=comics, general_knowledge=general_knowledge, points_timeattack=points_timeattack, animals_timeattack=animals_timeattack, video_games_timeattack=video_games_timeattack,
+     celebrities_timeattack=celebrities_timeattack, comics_timeattack=comics_timeattack, general_knowledge_timeattack=general_knowledge_timeattack)
 
 
 def errorhandler(e):

@@ -5,9 +5,11 @@ Leaderboards TimeAttack!
 {% endblock %}
 
 {% block main %}
+
 <!-- Run the script that shows and hides category on select from the drop-down menu -->
 <script src="/static/select.categories.js"></script>
 <h2 style="color:#FAA916">TimeAttack! Leaderboards</h2>
+
 <!-- Select which category you want to show the leaderboards of -->
 <form action="/leaderboards_timeattack" method="post">
     <select id="categories" onchange='onCategorySelect()'>
@@ -21,10 +23,9 @@ Leaderboards TimeAttack!
     </select>
 
     <!-- Show the tables of each category (only shown when selected) -->
-
     <body>
         <form id="form1">
-            <table id="combined" align="center">
+            <table class="specialtable" id="combined" align="center">
                 <thead align="left">
                     <th>Username</th>
                     <th>Total Points</th>
@@ -48,7 +49,7 @@ Leaderboards TimeAttack!
                     {% endfor %}
                 </tbody>
             </table>
-            <table id="animals" align="center">
+            <table class="specialtable" id="animals" align="center">
                 <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
@@ -62,7 +63,7 @@ Leaderboards TimeAttack!
                     {% endfor %}
                 </tbody>
             </table>
-            <table id="video_games" align="center">
+            <table class="specialtable" id="video_games" align="center">
                 <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
@@ -76,7 +77,7 @@ Leaderboards TimeAttack!
                     {% endfor %}
                 </tbody>
             </table>
-            <table id="celebrities" align="center">
+            <table class="specialtable" id="celebrities" align="center">
                 <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
@@ -90,7 +91,7 @@ Leaderboards TimeAttack!
                     {% endfor %}
                 </tbody>
             </table>
-            <table id="comics" align="center">
+            <table class="specialtable" id="comics" align="center">
                 <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
@@ -104,7 +105,7 @@ Leaderboards TimeAttack!
                     {% endfor %}
                 </tbody>
             </table>
-            <table id="general_knowledge" align="center">
+            <table class="specialtable" id="general_knowledge" align="center">
                 <thead align="left">
                     <th>Username</th>
                     <th>Points</th>
