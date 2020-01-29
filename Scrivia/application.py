@@ -127,7 +127,13 @@ def get_questions(category, type):
     response.raise_for_status()
     json_response = response.json()['results']
     return json_response
-    
+
+# This function removes things like "&quot;" and replaces them with a quote   
+def cleanhtml(raw_html):
+    cleanr = re.compile('&.*?;')
+    cleantext = re.sub(cleanr, "'", raw_html)
+    return cleantext
+
 # Making the question usable in terms of format
 def call_question(cate, diff, questionset):
     question = get_questions(cate, diff)[0]
@@ -135,7 +141,19 @@ def call_question(cate, diff, questionset):
     if len(intlist) >= 1 or question['correct_answer'] in questionset:
         return call_question(cate, diff, questionset)
     else:
-        return question
+        answers = question["incorrect_answers"]
+        answers.append(question["correct_answer"])
+
+        # We need to clean all
+        new_answer_0 = cleanhtml(answers[0])
+        new_answer_1 = cleanhtml(answers[1])
+        new_answer_2 = cleanhtml(answers[2])
+        new_answer_3 = cleanhtml(answers[3])
+
+        # This list contains all answers
+        new_answers = [new_answer_0, new_answer_1, new_answer_2, new_answer_3]
+        random.shuffle(new_answers)
+        return question["question"], new_answers, question["correct_answer"]
 
 # Running a game for players inside the specific lobby
 @socketio.on('startgame')
@@ -155,19 +173,22 @@ def game_start(category):
 
     # iterating thru the players in the lobby
     for host in lobby_players:
-        category_list = ['any','animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
-        triv = call_question(category, 'regular', questionset)
-        correct = triv['correct_answer']
-        question = triv["question"]
-        answers = triv["incorrect_answers"]
-        answers.append(correct)
-        random.shuffle(answers)
+        triv = call_question(category, 'timeattack', questionset)
+        
+        question = triv[0]
+        all_answers = triv[1]
+        correct = triv[2]
+
+        random.shuffle(all_answers)
+
+        questionset.add(correct)
 
         current_hosts[room] = host
         correct_answers[room] = correct
@@ -182,12 +203,12 @@ def game_start(category):
         time.sleep(10)
 
         # letting javascript run the guessing fase at the client
-        emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
+        emit('fase2', (host, all_answers, question, correct), broadcast=True, room=room)
         time.sleep(10)
 
     # letting javascript run the endfase of the game finishing everything up
     emit('endfase', broadcast=True, room=room)
-    # iterating thru players left in te lobby
+    # iterating through players left in te lobby
     for player in lobby_players:
         if player in current_users:
             if current_users[player][0] == room:
@@ -224,22 +245,29 @@ def TimeAttack_start():
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
+
+        # correct = triv['correct_answer']
+        # question = triv["question"]
+        # answers = triv["incorrect_answers"]
+
         triv = call_question(category, 'timeattack', questionset)
+        print(triv)
+        question = triv[0]
+        all_answers = triv[1]
+        correct = triv[2]
 
-        correct = triv['correct_answer']
-        question = triv["question"]
-        answers = triv["incorrect_answers"]
+        random.shuffle(all_answers)
 
-        answers.append(correct)
-        random.shuffle(answers)
+        questionset.add(correct)
+
         correct_answers[room] = correct
         
         questionset.add(correct)
 
-        emit('newround', (answers, question, correct, lives), broadcast=True, room=room)
+        emit('newround', (all_answers, question, correct, lives), broadcast=True, room=room)
         time.sleep(7)
         emit("timeup")
-        time.sleep(3)
+        time.sleep(2)
 
     emit('endfase', broadcast=True)
     if username in current_users:
@@ -408,7 +436,6 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
-
 
 @app.route("/leaderboards_classic", methods=["GET", "POST"])
 @login_required
