@@ -92,6 +92,7 @@ def on_lobby_request(lobby, category, gamemode):
     
     join_room(lobby)
     current_users[username] = [lobby, 0, category, hearts, gamemode]
+    print(current_users[username])
     
 
 # readding the user to the chosen lobby when entering the game page
@@ -108,6 +109,7 @@ def on_join_request():
             message = username + " has joined the game"
             emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
             emit('user message', message, broadcast=True, room=room)
+            print(current_users[username])
         else:
             emit("nolobby")
     else:
@@ -205,7 +207,7 @@ def TimeAttack_start():
     username = session["username"]
     room = username
     current_users[username][3] = 3
-    
+
     questionset = set()
     timeout = 90
     timeout_start = time.time()
@@ -234,10 +236,10 @@ def TimeAttack_start():
         
         questionset.add(correct)
 
-        pointsdata = current_users[username][1]
-
-        emit('newround', (answers, question, correct, lives, pointsdata), broadcast=True, room=room)
-        time.sleep(5)
+        emit('newround', (answers, question, correct, lives), broadcast=True, room=room)
+        time.sleep(7)
+        emit("timeup")
+        time.sleep(3)
 
     emit('endfase', broadcast=True)
     if username in current_users:
@@ -281,13 +283,18 @@ def on_registerpoints():
 def on_answer(answer):
     username = session["username"]
     lobby = current_users[username][0]
-    host = current_hosts[lobby]
+
+    print(answer)
+    print(correct_answers[lobby])
+
+
     if current_users[username][4] == 'timeattack':
         if correct_answers[lobby] == answer:
             current_users[username][1] += 3
         else:
             current_users[username][3] -= 1
     elif current_users[username][4] == 'classic':
+        host = current_hosts[lobby]
         if correct_answers[lobby] == answer:
             current_users[username][1] += 3
             current_users[host][1] += 1
