@@ -4,7 +4,7 @@
 
 ![logo](https://i.imgur.com/QB4qWwa.png)
 
-Scrivia is een online, real-time multiplayer game waarbij je met je vrienden tivia vragen tekent en beantwoord. Om de beurt krijgt iemand een vraag te zien (samen met het antwoord). Deze persoon krijgt dan een minuut de tijd om een tekening te maken die de andere spelers op weg helpt om de trivia vraag te beantwoorden. Nadat de tekening is gemaakt, krijgen de andere spelers de tekening en de vraag zien, waarop ze de vraag in een multiple choice format kunnen beantwoorden. 
+Scrivia is een online, real-time multiplayer game waarbij je met je vrienden tivia vragen tekent en probeert te beantwoorden. Om de beurt krijgt iemand een vraag te zien (samen met het antwoord). Deze persoon krijgt dan een minuut de tijd om een tekening te maken die de andere spelers op weg helpt om de trivia vraag te beantwoorden. Nadat de tekening is gemaakt, krijgen de andere spelers de tekening en de vraag zien, waarop ze de vraag in een multiple choice format kunnen beantwoorden. 
 
 Naast de Classic Scrivia gamemode, heb je ook de TimeAttack! gamemode. In deze mode krijg je 90 seconden om zo veel mogelijk vragen te beantwoorden. Maar kijk uit, je hebt maar 3 levens! Als je drie vragen verkeerd heb, lig je eruit!
 Kijk na het spelen naar de leaderboards om te kijken hoe je het hebt gedaan, de beste tien Scrivia spelers kan je daar vinden (voor zowel de Classic als de TimeAttack! gamemode!).
