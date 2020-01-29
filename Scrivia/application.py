@@ -23,11 +23,16 @@ from helpers import apology, login_required
 import re
 import logging
 import json
+import re
+import logging
 
 # Configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
+
+# show prints
+logging.basicConfig(level=logging.DEBUG)
 
 # Ensure responses aren't cached
 @app.after_request
@@ -437,17 +442,14 @@ def leaderboards_classic():
     return render_template("leaderboards_classic.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
-@app.route("/change_password", methods=["GET", "PUT"])
+@app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
     # password = request.form.get("password")
     # new_password = request.form.get("new_password")
     # new_confirm = request.form.get("new_confirm")
 
-    if request.method == "PUT":
-
-        print("hoi")
-
+    if request.method == "POST":
         # Make sure password was acknowledged
         if not request.form.get("password"):
             return apology("must provide old password", 400)
@@ -476,20 +478,14 @@ def change_password():
         elif not request.form.get("new_confirm") == request.form.get("new_password"):
             return apology("passwords must match", 400)
 
-        print("hoi")
-
         # Make sure password satisfies
         password_hash = scrivdb.execute("SELECT hash FROM users WHERE id = :user", user=session["user_id"])
         if not check_password_hash(password_hash[0]["hash"], request.form.get("password")):
             return apology("wrong password", 400)
 
-        print("hoi")
-
         # Replace the old password
         result = scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
             request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
-        print(result)
-        print("hoi")
 
         return redirect("/")
     else:

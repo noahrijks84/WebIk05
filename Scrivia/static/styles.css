@@ -312,6 +312,12 @@ table tr td:first-child::before{
     font-weight: bold;
 }
 
+form[action="/register"][method="post"] .form-group, 
+form[action="/register"][method="post"] #password-strength-text,
+form[action="/change_password"][method="post"] #new-password-strength-text {
+    margin: 0;
+}
+
 /* landing page */
 #landingcontent {
     width: 100%;
