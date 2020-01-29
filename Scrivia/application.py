@@ -211,7 +211,7 @@ def game_start(category):
         all_answers = triv[1]
         correct = triv[2]
 
-        # Adds the 
+        # Adds the correct answer to the questionset
         questionset.add(correct)
 
         current_hosts[room] = host
