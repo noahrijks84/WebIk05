@@ -433,10 +433,6 @@ def leaderboards_classic():
 @app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
-    # password = request.form.get("password")
-    # new_password = request.form.get("new_password")
-    # new_confirm = request.form.get("new_confirm")
-
     if request.method == "POST":
         # Make sure password was acknowledged
         if not request.form.get("password"):
