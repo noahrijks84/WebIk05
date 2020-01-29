@@ -92,7 +92,6 @@ def on_lobby_request(lobby, category, gamemode):
     
     join_room(lobby)
     current_users[username] = [lobby, 0, category, hearts, gamemode]
-    print(current_users[username])
     
 
 # readding the user to the chosen lobby when entering the game page
@@ -109,7 +108,6 @@ def on_join_request():
             message = username + " has joined the game"
             emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
             emit('user message', message, broadcast=True, room=room)
-            print(current_users[username])
         else:
             emit("nolobby")
     else:
@@ -155,7 +153,7 @@ def game_start(category):
 
     # iterating thru the players in the lobby
     for host in lobby_players:
-        category_list = ['any','animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
+        category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
         for cat in range(int(len(category_list) / 2.0)):
@@ -179,11 +177,11 @@ def game_start(category):
 
         # letting javascript run the drawing fase at the client
         emit('fase1', (host, hostdata), broadcast=True, room=room)
-        time.sleep(10)
+        time.sleep(60)
 
         # letting javascript run the guessing fase at the client
         emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
-        time.sleep(10)
+        time.sleep(20)
 
     # letting javascript run the endfase of the game finishing everything up
     emit('endfase', broadcast=True, room=room)
@@ -194,9 +192,10 @@ def game_start(category):
                 # clearing all the player data
                 username = player
                 points = current_users[player][1]
+                gamemode = current_users[player][4]
 
                 # emitting a request to register the user points
-                emit("pointsregister", (username, points, catlook))
+                emit("pointsregister", (username, points, catlook, gamemode))
                 current_users[player][2] = None
     time.sleep(10)
 
@@ -246,8 +245,9 @@ def TimeAttack_start():
         if current_users[username][0] == room:
             points = current_users[username][1]
             category = current_users[username][2]
+            gamemode = current_users[username][4]
 
-            emit("pointsregister", (username, points, category))
+            emit("pointsregister", (username, points, category, gamemode))
             current_users[username][1] = 0
     time.sleep(10)
 
@@ -267,14 +267,24 @@ def on_registerpoints():
     username = split_data[0]
     points = split_data[1]
     category = split_data[2]
+    gamemode = split_data[3]
 
-    scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
-            points=points,
-            username=username)
-    scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
-            points=points,
-            username=username,
-            category=category)
+    if gamemode == "classic":
+        scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
+                points=points,
+                username=username)
+        scrivdb.execute("UPDATE statistics SET :category = :category + :points WHERE username = :username",
+                points=points,
+                username=username,
+                category=category)
+    elif gamemode == "timeattack":
+        scrivdb.execute("UPDATE timeattack SET points = points + :points WHERE username = :username",
+                points=points,
+                username=username)
+        scrivdb.execute("UPDATE timeattack SET :category = :category + :points WHERE username = :username",
+                points=points,
+                username=username,
+                category=category)
 
     return jsonify(True)
     
@@ -283,10 +293,6 @@ def on_registerpoints():
 def on_answer(answer):
     username = session["username"]
     lobby = current_users[username][0]
-
-    print(answer)
-    print(correct_answers[lobby])
-
 
     if current_users[username][4] == 'timeattack':
         if correct_answers[lobby] == answer:
@@ -408,17 +414,6 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
-
-
-@app.route("/leaderboards_classic", methods=["GET"])
-@login_required
-def leaderboards_classic_redirect():
-    return render_template("leaderboards_classic.html")
-
-@app.route("/leaderboards_timeattack", methods=["GET"])
-@login_required
-def leaderboards_timeattack_redirect():
-    return render_template("leaderboards_timeattack.html")
 
 @app.route("/leaderboards_classic", methods=["GET", "POST"])
 @login_required

@@ -217,9 +217,9 @@
         document.getElementById("answers").innerHTML = ("");
     });
 
-    socket.on('pointsregister', function(username, points, category){
+    socket.on('pointsregister', function(username, points, category, gamemode){
         // sending the data to the server to be registered
-        let round_data = [username, points, category]
+        let round_data = [username, points, category, gamemode]
         $.get("/registerpoints?round_data=" + round_data)
     });
 
