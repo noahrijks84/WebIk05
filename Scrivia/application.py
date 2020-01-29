@@ -12,7 +12,7 @@
 
 import os
 from cs50 import SQL
-import time, random
+import time, random, re, logging, json, requests
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
 from flask_socketio import SocketIO, emit, send, join_room, leave_room, rooms
@@ -20,18 +20,14 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 from helpers import apology, login_required
-import re
-import logging
-import json
-import re
-import logging
+
 
 # Configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
 
-# show prints
+# Show prints
 logging.basicConfig(level=logging.DEBUG)
 
 # Ensure responses aren't cached
@@ -46,15 +42,17 @@ def after_request(response):
 trivdb = SQL("sqlite:///trivdb.db")
 scrivdb = SQL("sqlite:///scrivia.db")
 
+# These dictionaries are used to save data used in multiple functions
 current_users = {}
 correct_answers = {}
 current_hosts = {}
 
-# Removing the user from the lobby when closing/reloading the tab
 @app.route("/leaverequest")
 @login_required
 def on_pageleave():
+    """ Removing the user from the lobby when closing/reloading the tab """
     username = session["username"]
+    # If there is data stored in the dictionaries, that data is reset for that user
     if username in current_users:
         room = current_users[username][0]
         current_users[username][0] = None
@@ -65,7 +63,10 @@ def on_pageleave():
 
         message = username + " has left the game"
         lobby_players = [k for k,v in current_users.items() if v[0] == room]
+        # Emits the amount of players in a lobby
         socketio.emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+
+        # Emits a message to the room that a player has left
         socketio.emit('user message', message, broadcast=True, room=room)
     return jsonify(True)
 
@@ -74,6 +75,7 @@ def on_pageleave():
 @login_required
 def on_leave_request():
     username = session["username"]
+    # If there is data stored in the dictionaries, that data is reset for that user
     if username in current_users:
         current_users[username][0] = None
         current_users[username][1] = 0
@@ -81,24 +83,29 @@ def on_leave_request():
         current_users[username][3] = 0
         current_users[username][4] = None
 
-# Adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
 def on_lobby_request(lobby, category, gamemode):
+    """ Adding player to the chosen lobby """
     username = session["username"]
-    hearts = 0
+
+    # Since TimeAttack is a singleplayer gamemode, we can use the username as a lobby
     if gamemode == 'timeattack':
         lobby = username
     
     join_room(lobby)
-    current_users[username] = [lobby, 0, category, hearts, gamemode]
+
+    # Put user in a dictionary to save data for that user
+    current_users[username] = [lobby, 0, category, 0, gamemode]
     
 
 # readding the user to the chosen lobby when entering the game page
 @socketio.on('joinrequest')
 @login_required
 def on_join_request():
+    """ Readding the user to the chosen lobby when entering the game page """
     username = session["username"]
+    # User gets notified if they aren't in a lobby
     if username in current_users:
         lobby = current_users[username][0]
         if lobby != None:
@@ -107,15 +114,16 @@ def on_join_request():
             lobby_players = [k for k,v in current_users.items() if v[0] == room]
             message = username + " has joined the game"
             emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
+            # Emits a message to the room of the user
             emit('user message', message, broadcast=True, room=room)
         else:
             emit("nolobby")
     else:
         emit("nolobby")
 
-# Requesting a question from the api
-def get_questions(category, type):
-    import requests
+
+def get_questions(category, type): 
+    """ Retrieves a question from the API """
     url = 'https://opentdb.com/api.php'
     if type == 'timeattack':
         parameters = {'amount': '1', 'type': 'multiple', 'category': category}
@@ -126,14 +134,17 @@ def get_questions(category, type):
     json_response = response.json()['results']
     return json_response
 
-# This function removes things like "&quot;" and replaces them with an actual quote   
+# This code was written by stackoverflow user c24b
+# Link to code used: https://stackoverflow.com/questions/9662346/python-code-to-remove-html-tags-from-a-string
 def cleanhtml(raw_html):
+    """ This function removes things like '&quot;' and replaces them with an actual quote """
     cleanr = re.compile('&.*?;')
     cleantext = re.sub(cleanr, "'", raw_html)
     return cleantext
 
-# Making the question usable in terms of format
 def call_question(cate, diff, questionset):
+    """ Making the question usable in terms of format """
+    # Gets a question from the API
     question = get_questions(cate, diff)[0]
 
     # If there are numbers in intlist, call_question is called again, because drawing numbers defeats the purpose of the game
@@ -145,7 +156,7 @@ def call_question(cate, diff, questionset):
         answers = question["incorrect_answers"]
         answers.append(question["correct_answer"])
 
-        # We need to get rid of the &quot; that is, sometimes, in between of the answer strings
+        # We need to get rid of the &quot; that is (sometimes) in the answer strings
         new_answer_0 = cleanhtml(answers[0])
         new_answer_1 = cleanhtml(answers[1])
         new_answer_2 = cleanhtml(answers[2])
@@ -156,21 +167,23 @@ def call_question(cate, diff, questionset):
 
         # The answers are shuffled, otherwise they would always be in the same spot in the list
         random.shuffle(new_answers)
+        # The &quot; needs to be cleared from the question also
         new_question = cleanhtml(question["question"])
         return new_question, new_answers, question["correct_answer"]
 
-# Running a game for players inside the specific lobby
+
 @socketio.on('startgame')
 @login_required
 def game_start(category):
+    """ Running the classic scrivia game for players inside a specific lobby """
     username = session["username"]
-
     
     room = current_users[username][0]
 
     # Checks which users are in the lobby
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
 
+    # Correct answers are added in questionset to prevent getting the same question multiple times in the same game
     questionset = set()
     catlook = category 
 
@@ -181,15 +194,18 @@ def game_start(category):
                 current_users[player][1] = 0
                 current_users[player][2] = catlook
 
-    # Iterating thru the players in the lobby
+    # Iterates through players in the lobby
     for host in lobby_players:
+        # The API has certain IDs they use for certain categories. The IDs in the category_list are those of the categories that can be chosen
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
+        # Looks what category was selected and sets category to the right ID to call a question
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
+        # Gets a question from the API
         triv = call_question(category, 'timeattack', questionset)
         
         # Correctly selects all information by index
@@ -197,35 +213,35 @@ def game_start(category):
         all_answers = triv[1]
         correct = triv[2]
 
-
+        # Adds the 
         questionset.add(correct)
 
         current_hosts[room] = host
         correct_answers[room] = correct
 
-        # Formatting data to display with the host player
+        # Formatting data to display for the host 
         hostdata = question + " answer: " + correct
 
-        # Letting javascript run the drawing fase at the client
+        # Letting javascript run the drawing fase
         emit('fase1', (host, hostdata), broadcast=True, room=room)
         time.sleep(60)
 
-        # Letting javascript run the guessing fase at the client
+        # Letting javascript run the guessing fase
         emit('fase2', (host, all_answers, question, correct), broadcast=True, room=room)
         time.sleep(20)
 
-    # Letting javascript run the endfase of the game finishing everything up
+    # Letting javascript run the endfase of the game
     emit('endfase', broadcast=True, room=room)
-    # Iterating through players left in te lobby
+    # Iterates through players in the lobby
     for player in lobby_players:
         if player in current_users:
             if current_users[player][0] == room:
-                # Clearing all the player data
+                # Clearing all of the player data
                 username = player
                 points = current_users[player][1]
                 gamemode = current_users[player][4]
 
-                # emitting a request to register the user points
+                # Emitting a request to register the user points
                 emit("pointsregister", (username, points, catlook, gamemode))
                 current_users[player][2] = None
     time.sleep(10)
@@ -234,7 +250,7 @@ def game_start(category):
 @socketio.on('startTimeAttack')
 @login_required
 def TimeAttack_start():
-    """Code van TimeAttack!, de gamemode waar je binnen 90 seconden vragen moet beantwoorden"""
+    """ Running TimeAttack!, a seperate singleplayer gamemode """
     username = session["username"]
     room = username
     current_users[username][3] = 3
@@ -261,33 +277,36 @@ def TimeAttack_start():
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
+        # Retrieves a question from the API
         triv = call_question(category, 'timeattack', questionset)
         
+        # Correctly selects all information by index
         question = triv[0]
         all_answers = triv[1]
         correct = triv[2]
 
-        # Shuffles
-        random.shuffle(all_answers)
-
-        
-
+        # Assign the correct answer to a dict to check if the player answered correctly
         correct_answers[room] = correct
         
         questionset.add(correct)
 
+        # Emits the start of a new round to javascript
         emit('newround', (all_answers, question, correct, lives), broadcast=True, room=room)
+        # The user has 7 seconds to answer a question
         time.sleep(7)
+        # timeup removes the buttons, so the program has enough time to check if the given answer is correct
         emit("timeup")
         time.sleep(2)
 
     emit('endfase', broadcast=True)
     if username in current_users:
         if current_users[username][0] == room:
+            # Clearing all of the player data
             points = current_users[username][1]
             category = current_users[username][2]
             gamemode = current_users[username][4]
 
+            # Emitting a request to update the points
             emit("pointsregister", (username, points, category, gamemode))
             current_users[username][1] = 0
     time.sleep(10)
@@ -297,12 +316,14 @@ def TimeAttack_start():
 def on_requestpoints():
     username = session["username"]
     points = current_users[username][1]
+    # Emits the right amount of points to javascript
     emit("pointsreturn", points)
 
 
 @app.route("/registerpoints")
 @login_required
 def on_registerpoints():
+    """ Update the database, adds all points earned to the database """
     round_data = request.args.get("round_data")
     split_data = round_data.split(',')
     username = split_data[0]
@@ -310,6 +331,7 @@ def on_registerpoints():
     category = split_data[2]
     gamemode = split_data[3]
 
+    # We used different tables for the different gamemodes
     if gamemode == "classic":
         scrivdb.execute("UPDATE statistics SET points = points + :points WHERE username = :username",
                 points=points,
@@ -326,47 +348,52 @@ def on_registerpoints():
                 points=points,
                 username=username,
                 category=category)
-
+    # An ajax request expects a return, hence the jsonify
     return jsonify(True)
     
 @socketio.on('answer')
 @login_required
 def on_answer(answer):
+    """ Checks if the given answer is correct """
     username = session["username"]
     lobby = current_users[username][0]
 
     if current_users[username][4] == 'timeattack':
         if correct_answers[lobby] == answer:
+            # If the answer is correct, the user gets 3 points
             current_users[username][1] += 3
         else:
+            # If the answer isn't correct, the user loses a life
             current_users[username][3] -= 1
     elif current_users[username][4] == 'classic':
         host = current_hosts[lobby]
         if correct_answers[lobby] == answer:
+            # If the answer is correct, the user gets 3 points, and the person who made the drawing gets one point
             current_users[username][1] += 3
             current_users[host][1] += 1
 
 
-# emitting the picture drawn by the host
 @socketio.on('picture')
 def handle_user_picture(message):
+    """ Emits the drawing created by the host """
     username = session["username"]
     room = current_users[username][0]
     emit('picture', message, broadcast=True, room=room)
 
-# emitting user chat messages to other players in the room
 @socketio.on('chat message')
 @login_required
 def handle_user_chat(message):
+    """ Emitting user chat messages to other players in the room """
     username = session["username"]
     message = username + ": " + message
     room = current_users[username][0]
     emit('user message', message, broadcast=True, room=room)
 
-# returning a requested player username
+
 @app.route("/getusername", methods=["GET"])
 @login_required
 def username():
+    """returning the requested username"""
     return session["username"]
 
 
@@ -397,20 +424,20 @@ def timeattack():
 def check():
     """Return true if username available, else false, in JSON format"""
 
-    # retrieving username
+    # Retrieves username
     username = request.args.get("username").strip()
 
-    # retrieving existing usernames
+    # Retrieves existing usernames
     answer = scrivdb.execute("SELECT * FROM users WHERE username = :username", username = username)
 
-    # checking if username existed
+    # Checking if username exists
     data = not len(answer) > 0
 
     return jsonify(data)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Log user in"""
+    """Logs user in"""
 
     # Forget any user_id
     session.clear()
@@ -480,12 +507,13 @@ def leaderboards_classic():
 @app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
+    """ Changes the password of a user """
     if request.method == "POST":
-        # Make sure password was acknowledged
+        # Make sure the password form isn't empty
         if not request.form.get("password"):
             return apology("must provide old password", 400)
 
-        # Make sure new password was acknowledged
+        # Make sure new password form isn't empty
         elif not request.form.get("new_password"):
             return apology("must provide new password", 400)
 
@@ -501,7 +529,7 @@ def change_password():
         elif not request.form.get("new_confirm"):
             return apology("must provide confirmation", 400)
 
-        # Make sure the new password is different to the old one
+        # Make sure the new password is different from the old one
         elif request.form.get("new_password") == request.form.get("password"):
             return apology("must provide different password", 400)
 
@@ -622,16 +650,17 @@ def register():
 @app.route("/profilepage", methods=["GET", "POST"])
 @login_required
 def profilepage():
+    """ Lets user see their statistics """
     date_joined = scrivdb.execute("SELECT date_joined FROM users WHERE username = :username",
             username=session["username"])
 
-    # Retrieves the user's personal statistics
+    # Retrieves personal statistics from user
     personal_statistics_classic = scrivdb.execute("SELECT * FROM statistics WHERE username = :username",
             username=session["username"])
     personal_statistics_timeattack = scrivdb.execute("SELECT * FROM timeattack WHERE username = :username",
             username=session["username"])
 
-    # Retrieve dict values to send to HTML for the Classic game mode
+    # Retrieve dict values to send to HTML for the Classic gamemode
     points = personal_statistics_classic[0]["points"]
     animals = personal_statistics_classic[0]["animals"]
     video_games = personal_statistics_classic[0]["video_games"]
@@ -639,7 +668,7 @@ def profilepage():
     comics = personal_statistics_classic[0]["comics"]
     general_knowledge = personal_statistics_classic[0]["general_knowledge"]
 
-    # Retrieve dict values to send to HTML for the TimeAttack! game mode
+    # Retrieve dict values to send to HTML for the TimeAttack! gamemode
     points_timeattack = personal_statistics_timeattack[0]["points"]
     animals_timeattack = personal_statistics_timeattack[0]["animals"]
     video_games_timeattack = personal_statistics_timeattack[0]["video_games"]
