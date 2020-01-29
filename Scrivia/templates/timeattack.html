@@ -60,7 +60,7 @@
     socket.on('newround', function(answers, question, correct, lives){
         socket.emit('pointsrequest');
         
-        document.getElementById("lives").innerHTML = ("you have " + lives + " lives");
+        document.getElementById("lives").innerHTML = ("You have " + lives + " live(s) left!");
 
         document.getElementById("myButton1").value=(answers[0]);
         document.getElementById("myButton2").value=(answers[1]);

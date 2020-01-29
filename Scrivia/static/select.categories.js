@@ -21,7 +21,7 @@ window.onload = function () {
 
 // Chooses which category to show or hide depending on the selected category
 function onCategorySelect() {
-    var category = document.getElementById("categories").value;
+    var category = document.getElementById("categoriesleaderboards").value;
     if (category == "animals") {
         document.getElementById("animals").style.display = "";
         document.getElementById("video_games").style.display = "none";
