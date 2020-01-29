@@ -4,7 +4,7 @@
 {% endblock %}
 
 {% block title %}
-LProfile Page
+Profile Page
 {% endblock %}
 
 {% block main %}
@@ -15,10 +15,9 @@ LProfile Page
             <b>Date joined:</b> {{ date_joined }}<br>
             <a style="color:#FAA916" href="change_password" id="changepassword">Change password.</a>
         </p>
-        <h3 style="color:#FAA916">Personal statistics classic:</h3>
-        <table id="combined" align="center">
+        <h3 style="color:#FAA916">Personal Statistics Classic</h3>
+        <table align="center">
             <thead align="left">
-                <th>Username</th>
                 <th>Total Points</th>
                 <th>Animals</th>
                 <th>Video Games</th>
@@ -27,23 +26,19 @@ LProfile Page
                 <th>General Knowledge</th>
             </thead>
             <tbody>
-                {% for player in total_points_classic %}
                 <tr align="left">
-                    <td>{{ player["username"] }}</td>
-                    <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
-                    <td>{{ player["animals"] }}</td>
-                    <td>{{ player["video_games"] }}</td>
-                    <td>{{ player["celebrities"] }}</td>
-                    <td>{{ player["comics"] }}</td>
-                    <td>{{ player["general_knowledge"] }}</td>
+                    <td>{{ points }}</td>
+                    <td>{{ animals }}</td>
+                    <td>{{ video_games }}</td>
+                    <td>{{ celebrities }}</td>
+                    <td>{{ comics }}</td>
+                    <td>{{ general_knowledge }}</td>
                 </tr>
-                {% endfor %}
             </tbody>
         </table>
-        <h3 style="color:#FAA916">Personal statistics timeattack:</h3>
-        <table id="combined" align="center">
+        <h3 style="color:#FAA916">Personal Statistics TimeAttack!</h3>
+        <table id="combined5" align="center">
             <thead align="left">
-                <th>Username</th>
                 <th>Total Points</th>
                 <th>Animals</th>
                 <th>Video Games</th>
@@ -52,17 +47,14 @@ LProfile Page
                 <th>General Knowledge</th>
             </thead>
             <tbody>
-                {% for player in total_points_timeattack %}
                 <tr align="left">
-                    <td>{{ player["username"] }}</td>
-                    <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
-                    <td>{{ player["animals"] }}</td>
-                    <td>{{ player["video_games"] }}</td>
-                    <td>{{ player["celebrities"] }}</td>
-                    <td>{{ player["comics"] }}</td>
-                    <td>{{ player["general_knowledge"] }}</td>
+                    <td>{{ points_timeattack }}</td>
+                    <td>{{ animals_timeattack }}</td>
+                    <td>{{ video_games_timeattack }}</td>
+                    <td>{{ celebrities_timeattack }}</td>
+                    <td>{{ comics_timeattack }}</td>
+                    <td>{{ general_knowledge_timeattack }}</td>
                 </tr>
-                {% endfor %}
             </tbody>
         </table>
     </div>

@@ -27,7 +27,12 @@ def get_questions(category, type):
     response.raise_for_status()
     json_response = response.json()['results']
     return json_response
-    
+
+def cleanhtml(raw_html):
+    cleanr = re.compile('&.*?;')
+    cleantext = re.sub(cleanr, "'", raw_html)
+    return cleantext
+
 # Making the question usable in terms of format
 def call_question(cate, type, questionset):
     question = get_questions(cate, type)[0]
@@ -37,17 +42,19 @@ def call_question(cate, type, questionset):
     else:
         if question["correct_answer"] != 'Cheetah':
             return call_question(cate, type, questionset)
-        return question
-
-
-def cleanhtml(raw_html):
-    cleanr = re.compile('&.*?;')
-    cleantext = re.sub(cleanr, "'", raw_html)
-    return cleantext
-
+        
+        answers = question["incorrect_answers"]
+        answers.append(question["correct_answer"])
+        new_answer_0 = cleanhtml(answers[0])
+        new_answer_1 = cleanhtml(answers[1])
+        new_answer_2 = cleanhtml(answers[2])
+        new_answer_3 = cleanhtml(answers[3])
+        new_answers = [new_answer_0, new_answer_1, new_answer_2, new_answer_3]
+        return question["question"], new_answers, question["correct_answer"]
 
 
 def getaquestion():
+
     questionset = set()
     catlook = 'animals'
 
@@ -58,30 +65,17 @@ def getaquestion():
             category = category_list[cat + 5]
 
     triv = call_question(category, 'timeattack', questionset)
-
-    correct = triv['correct_answer']
-    question = triv["question"]
-    answers = triv["incorrect_answers"]
-    answers.append(correct)
-
-    # print(answers)
+    print(triv)
     
-    new_answer_0 = cleanhtml(answers[0])
-    new_answer_1 = cleanhtml(answers[1])
-    new_answer_2 = cleanhtml(answers[2])
-    new_answer_3 = cleanhtml(answers[3])
-    new_answers = [new_answer_0, new_answer_1, new_answer_2, new_answer_3]
-    print(new_answers)
-    # new_answer = remove_html_markup(answers[1])
-    # try:
-    #     en = answers[1].index('&')
-    #     new_answer = new_answer[:en] + "'" + new_answer[en:]
-    # except:
-    #     ValueError
+    question = triv[0]
+    all_answers = triv[1]
+    correct = triv[2]
 
-    random.shuffle(answers)
+    random.shuffle(all_answers)
+
     questionset.add(correct)
-    return new_answers, question
+
+    return all_answers, question, correct
 
 
 getaquestion()

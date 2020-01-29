@@ -342,8 +342,7 @@ th, td{
     color: white;
 }
 
-table
-{
+.specialtable {
     counter-reset: rowNumber;
 }
 
@@ -357,11 +356,11 @@ table
     border-color: #2c0e37;
 }
 
-table tr > td:first-child{
+.specialtable tr > td:first-child{
     counter-increment: rowNumber;
 }
 
-table tr td:first-child::before{
+.specialtable tr td:first-child::before{
     content: counter(rowNumber);
     min-width: 1em;
     margin-right: 0.5em;
