@@ -19,7 +19,7 @@ Sta je niet tussen de top 10 en ben je toch benieuwd naar je punten? Ga naar de 
 - **Real-time multiplayer (SocketIO):** Noah (geassisteerd door: Rogier)
 - **Classic gamemode:** Noah
 - **Statistics, leaderboards, profile page:** Sava
-- **Register (improved), change password:** Nick
+- **Register (improved), change password, howtoplay:** Nick
 
 #### Waar kan ik wat vinden?
 De gehele applicatie staat in de *"Scrivia"* map. Ben je op zoek naar de **"Meat & Potatoes"** van het programma? Dit staat allemaal in *"applications.py"* en de *templates* folder. Hier is respectievelijk de *controller* en de *view*. De *model* (de user-gegevens en de statistieken) kan je vinden in de *"scrivia.db"* en *"trivdb.db"* files. Binnen de *static* folder vindt je de javascript files (de plug-in die we hebben gebruikt voor het teken-gedeelte en een functie voor het verstoppen van tables) en de plaatjes die we hebben gebruikt voor de website. In *helpers.py* vindt je helpers voor de logout en apology functies en *ngrok.exe* wordt gebruikt om de website snel online te kunnen zetten.

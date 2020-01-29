@@ -222,11 +222,11 @@ def game_start(category):
 
         # Letting javascript run the drawing fase
         emit('fase1', (host, hostdata), broadcast=True, room=room)
-        time.sleep(45)
+        time.sleep(60)
 
         # Letting javascript run the guessing fase
         emit('fase2', (host, all_answers, question, correct), broadcast=True, room=room)
-        time.sleep(15)
+        time.sleep(20)
 
     # Letting javascript run the endfase of the game
     emit('endfase', broadcast=True, room=room)
