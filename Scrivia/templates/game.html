@@ -48,6 +48,14 @@
         </div>
         <div id="gamearea">
             <button class="buttonsquare" id="startbutton">Start Game!</button>
+            <select id="categories" onchange='onCategorySelect()'>
+                <option disabled selected value>Choose Category</option>
+                <option value="animals">Animals</option>
+                <option value="video_games">Video Games</option>
+                <option value="celebrities">Celebrities</option>
+                <option value="comics">Comics</option>
+                <option value="general_knowledge">General Knowledge</option>
+            </select>
             <p id="answers"></p>
             <p id="playerdata"></p>
             <p id="pointsdata"></p>
@@ -101,10 +109,17 @@
         document.getElementById("playerdata").innerHTML = ("Current player(s): " + playercount);
     });
 
-    socket.on('fase1', function(host, hostdata, pointsdata){
+    socket.on('pointsreturn', function(points){
+        document.getElementById("pointsdata").innerHTML = ("Current points: " + points);
+    });
+
+    socket.on('fase1', function(host, hostdata){
+        socket.emit('pointsrequest');
+
         // remove the start button
         document.getElementById("startbutton").disabled = true;
         document.getElementById("startbutton").style.display = "none";
+        document.getElementById("categories").style.display = "none";
         
         // clearing the canvas
         ctx.clearRect(0, 0, 2000, 2000);
@@ -119,9 +134,6 @@
         document.getElementById("myButton2").style.display = "none";
         document.getElementById("myButton3").style.display = "none";
         document.getElementById("myButton4").style.display = "none";
-        
-        // displaying the current amount of points
-        document.getElementById("pointsdata").innerHTML = ("you have " + pointsdata + " points");
 
         // checking if the player is the current host
         if (host != username) {
@@ -138,7 +150,9 @@
         }
     });
 
-    socket.on('fase2', function(host, answers, question, correct, pointsdata){
+    socket.on('fase2', function(host, answers, question, correct){
+        socket.emit('pointsrequest');
+
         // disabling the canvas for everyone
         $("#canvas1").drawr("stop");
 
@@ -147,9 +161,6 @@
         document.getElementById("myButton2").value=(answers[1]);
         document.getElementById("myButton3").value=(answers[2]);
         document.getElementById("myButton4").value=(answers[3]);
-
-        // displaying the current amount of points
-        document.getElementById("pointsdata").innerHTML = ("you have " + pointsdata + " points");
 
         // showing the answers to the host
         document.getElementById("answers").innerHTML = ("");
@@ -176,10 +187,13 @@
         }
     });
 
-    socket.on('endfase', function(pointsdata){
+    socket.on('endfase', function(){
+        socket.emit('pointsrequest');
+
         // resetting the start button
         document.getElementById("startbutton").disabled = false;
         document.getElementById("startbutton").style.display = "inline";
+        document.getElementById("categories").style.display = "inline";
 
         // disabling the canvas
         $("#canvas1").drawr("stop");
@@ -197,9 +211,6 @@
         document.getElementById("myButton2").style.display = "none";
         document.getElementById("myButton3").style.display = "none";
         document.getElementById("myButton4").style.display = "none";
-
-        // displaying the current amount of points
-        document.getElementById("pointsdata").innerHTML = ("you have " + pointsdata + " points");
 
         // letting the players know the game has ended
         document.getElementById("question").innerHTML = ("The game has ended");
@@ -236,7 +247,9 @@
             alert("There need to be at least 2 players in the lobby!")
         }
         else{
-            socket.emit('startgame');
+            let category = $('#categories').val();
+
+            socket.emit('startgame', category);
         }
     });
 
