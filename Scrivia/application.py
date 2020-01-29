@@ -60,8 +60,8 @@ def on_pageleave():
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
-        current_users[username][3] = None
-        current_users[username][4] = 0
+        current_users[username][3] = 0
+        current_users[username][4] = None
 
         message = username + " has left the game"
         lobby_players = [k for k,v in current_users.items() if v[0] == room]
@@ -78,24 +78,27 @@ def on_leave_request():
         current_users[username][0] = None
         current_users[username][1] = 0
         current_users[username][2] = None
-        current_users[username][3] = None
-        current_users[username][4] = 0
+        current_users[username][3] = 0
+        current_users[username][4] = None
 
 # Adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
-def on_lobby_request(lobby, category):
+def on_lobby_request(lobby, category, gamemode):
     username = session["username"]
-    print(category)
-    join_room(lobby)
     hearts = 0
-    current_users[username] = [lobby, 0, category, hearts]
+    if gamemode == 'timeattack':
+        lobby = username
+    
+    join_room(lobby)
+    current_users[username] = [lobby, 0, category, hearts, gamemode]
+    print(current_users[username])
+    
 
 # readding the user to the chosen lobby when entering the game page
 @socketio.on('joinrequest')
 @login_required
 def on_join_request():
-    print(current_users)
     username = session["username"]
     if username in current_users:
         lobby = current_users[username][0]
@@ -106,6 +109,7 @@ def on_join_request():
             message = username + " has joined the game"
             emit("playerupdate", len(lobby_players),  broadcast=True, room=room)
             emit('user message', message, broadcast=True, room=room)
+            print(current_users[username])
         else:
             emit("nolobby")
     else:
@@ -131,21 +135,26 @@ def call_question(cate, diff, questionset):
     if len(intlist) >= 1 or question['correct_answer'] in questionset:
         return call_question(cate, diff, questionset)
     else:
-        print(questionset)
         return question
 
 # Running a game for players inside the specific lobby
 @socketio.on('startgame')
 @login_required
-def game_start():
+def game_start(category):
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
     questionset = set()
+    catlook = category 
+
+    for player in lobby_players:
+        if player in current_users:
+            if current_users[player][0] == room:
+                current_users[player][1] = 0
+                current_users[player][2] = catlook
+
     # iterating thru the players in the lobby
     for host in lobby_players:
-        catlook = current_users[username][2]
-
         category_list = ['any','animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
 
@@ -168,19 +177,16 @@ def game_start():
         # formatting data to display with the host player
         hostdata = question + " answer: " + correct
 
-        # getting the current amount of points to display
-        pointsdata = current_users[username][1]
-
         # letting javascript run the drawing fase at the client
-        emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
-        time.sleep(30)
+        emit('fase1', (host, hostdata), broadcast=True, room=room)
+        time.sleep(10)
 
         # letting javascript run the guessing fase at the client
-        emit('fase2', (host, answers, question, correct, pointsdata), broadcast=True, room=room)
-        time.sleep(15)
+        emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
+        time.sleep(10)
 
     # letting javascript run the endfase of the game finishing everything up
-    emit('endfase', pointsdata, broadcast=True, room=room)
+    emit('endfase', broadcast=True, room=room)
     # iterating thru players left in te lobby
     for player in lobby_players:
         if player in current_users:
@@ -188,13 +194,10 @@ def game_start():
                 # clearing all the player data
                 username = player
                 points = current_users[player][1]
-                category = current_users[player][2]
 
                 # emitting a request to register the user points
-                emit("pointsregister", (username, points, category, pointsdata))
-
-        print(player + ": " + str(current_users[player][1]))
-        current_users[player][1] = 0
+                emit("pointsregister", (username, points, catlook))
+                current_users[player][2] = None
     time.sleep(10)
 
 
@@ -202,10 +205,9 @@ def game_start():
 @login_required
 def TimeAttack_start():
     username = session["username"]
-    room = current_users[username][0]
-    lobby_players = [k for k,v in current_users.items() if v[0] == room]
+    room = username
     current_users[username][3] = 3
-    
+
     questionset = set()
     timeout = 90
     timeout_start = time.time()
@@ -234,22 +236,27 @@ def TimeAttack_start():
         
         questionset.add(correct)
 
-        pointsdata = current_users[username][1]
+        emit('newround', (answers, question, correct, lives), broadcast=True, room=room)
+        time.sleep(7)
+        emit("timeup")
+        time.sleep(3)
 
-        emit('newround', (answers, question, correct, lives, pointsdata), broadcast=True, room=room)
-        time.sleep(5)
     emit('endfase', broadcast=True)
-    player = lobby_players[0]
-    if player in current_users:
-        if current_users[player][0] == room:
-            username = player
-            points = current_users[player][1]
-            category = current_users[player][2]
+    if username in current_users:
+        if current_users[username][0] == room:
+            points = current_users[username][1]
+            category = current_users[username][2]
 
             emit("pointsregister", (username, points, category))
-
-    current_users[player][1] = 0
+            current_users[username][1] = 0
     time.sleep(10)
+
+@socketio.on("pointsrequest")
+@login_required
+def on_requestpoints():
+    username = session["username"]
+    points = current_users[username][1]
+    emit("pointsreturn", points)
 
 
 @app.route("/registerpoints")
@@ -276,11 +283,21 @@ def on_registerpoints():
 def on_answer(answer):
     username = session["username"]
     lobby = current_users[username][0]
-    if correct_answers[lobby] == answer:
-        current_users[username][1] += 3
-    else:
-        if current_users[username][3] == 'TimeAttack':
-            current_users[username][4] -= 1
+
+    print(answer)
+    print(correct_answers[lobby])
+
+
+    if current_users[username][4] == 'timeattack':
+        if correct_answers[lobby] == answer:
+            current_users[username][1] += 3
+        else:
+            current_users[username][3] -= 1
+    elif current_users[username][4] == 'classic':
+        host = current_hosts[lobby]
+        if correct_answers[lobby] == answer:
+            current_users[username][1] += 3
+            current_users[host][1] += 1
 
 
 # emitting the picture drawn by the host
@@ -344,7 +361,6 @@ def check():
 
     return jsonify(data)
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -393,6 +409,16 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
+
+@app.route("/leaderboards_classic", methods=["GET"])
+@login_required
+def leaderboards_classic_redirect():
+    return render_template("leaderboards_classic.html")
+
+@app.route("/leaderboards_timeattack", methods=["GET"])
+@login_required
+def leaderboards_timeattack_redirect():
+    return render_template("leaderboards_timeattack.html")
 
 @app.route("/leaderboards_classic", methods=["GET", "POST"])
 @login_required

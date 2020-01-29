@@ -20,14 +20,6 @@
                 <p>If a lobby does exist, you will join it</p>
                 <form id="lobbyform" action="">
                     <input id="lobbybox" autocomplete="off"/>
-                    <select id="categories" onchange='onCategorySelect()'>
-                        <option disabled selected value>Choose Category</option>
-                        <option value="animals">Animals</option>
-                        <option value="video_games">Video Games</option>
-                        <option value="celebrities">Celebrities</option>
-                        <option value="comics">Comics</option>
-                        <option value="general_knowledge">General Knowledge</option>
-                    </select>
                     <button class="buttonsquare" id="chatbutton">Join Lobby!</button>
                 </form>
             </div>
@@ -67,10 +59,11 @@
         // submitting the chosen lobby
         e.preventDefault(); 
         let lobbyname = $('#lobbybox').val()
-        let lobbycategory = $('#categories').val()
+        let category = null;
+        let gamemode = 'classic';
 
         // submitting a lobbyrequest to let the server store the chosen lobby
-        socket.emit('lobbyrequest', lobbyname, lobbycategory);
+        socket.emit('lobbyrequest', lobbyname, category, gamemode);
         $('#lobbybox').val('');
 
         $.ajax({
@@ -89,9 +82,10 @@
         e.preventDefault(); 
         let category = $('#timecategories').val();
         let lobbyname = null;
+        let gamemode = 'timeattack';
 
         // submitting a lobbyrequest to let the server store the chosen lobby
-        socket.emit('lobbyrequest', lobbyname, category);
+        socket.emit('lobbyrequest', lobbyname, category, gamemode);
 
         $.ajax({
         	type : "GET",
