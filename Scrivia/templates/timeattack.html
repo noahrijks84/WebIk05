@@ -39,10 +39,6 @@
         username = data;
     })
 
-    window.onbeforeunload = function(event)
-    {
-        $.get('/leaverequest')
-    };
 
     socket.emit('joinrequest');
 

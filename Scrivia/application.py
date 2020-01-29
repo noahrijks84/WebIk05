@@ -353,24 +353,6 @@ def check():
     data = not len(answer) > 0
 
     return jsonify(data)
-    
-    # # Get username from GET
-    # username = request.args.get("username")
-
-    # # Select all usernames from database
-    # users = scrivdb.execute("SELECT username FROM users")
-
-    # # Return False if username length less than 1
-    # if len(username) < 1:
-    #     return jsonify(False)
-
-    # # Return false if username exists
-    # for user in users:
-    #     if user["username"] == username:
-    #         return jsonify(False)
-
-    # # If username length greater than 1 and doesn't exist, return True
-    # return jsonify(True)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -424,6 +406,16 @@ def logout():
 @login_required
 def choose_leaderboards():
     return render_template("choose_leaderboards.html")
+
+@app.route("/leaderboards_classic", methods=["GET"])
+@login_required
+def leaderboards_classic_redirect():
+    return render_template("leaderboards_classic.html")
+
+@app.route("/leaderboards_timeattack", methods=["GET"])
+@login_required
+def leaderboards_timeattack_redirect():
+    return render_template("leaderboards_timeattack.html")
 
 @app.route("/leaderboards_classic", methods=["GET", "POST"])
 @login_required
