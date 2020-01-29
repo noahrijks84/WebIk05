@@ -84,12 +84,12 @@ def on_leave_request():
 # Adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
-def on_lobby_request(lobby, category, gamemode):
+def on_lobby_request(lobby, category):
     username = session["username"]
     print(category)
     join_room(lobby)
     hearts = 0
-    current_users[username] = [lobby, 0, category, gamemode, hearts]
+    current_users[username] = [lobby, 0, category, hearts]
 
 # readding the user to the chosen lobby when entering the game page
 @socketio.on('joinrequest')
@@ -204,16 +204,16 @@ def TimeAttack_start():
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
-    current_users[username][4] = 3
+    current_users[username][3] = 3
     
     questionset = set()
     timeout = 90
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
 
-        if current_users[username][4] <= 0:
+        if current_users[username][3] <= 0:
             break
-        lives = current_users[username][4]
+        lives = current_users[username][3]
         catlook = current_users[username][2]
 
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
