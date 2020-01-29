@@ -350,7 +350,7 @@ th, td{
 
 .specialtable {
     counter-reset: rowNumber;
-    margin-top: 50px;
+    margin-top: 40px;
 }
 
 #leaderboards {
