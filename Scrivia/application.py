@@ -38,7 +38,7 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-# Configure CS50 Library to use SQLite database
+# Configure databases to use SQLite database
 trivdb = SQL("sqlite:///trivdb.db")
 scrivdb = SQL("sqlite:///scrivia.db")
 
@@ -70,7 +70,6 @@ def on_pageleave():
         socketio.emit('user message', message, broadcast=True, room=room)
     return jsonify(True)
 
-# Removing the user from the lobby when navigating to the lobby page
 @socketio.on('leaverequest')
 @login_required
 def on_leave_request():
@@ -99,7 +98,6 @@ def on_lobby_request(lobby, category, gamemode):
     current_users[username] = [lobby, 0, category, 0, gamemode]
     
 
-# readding the user to the chosen lobby when entering the game page
 @socketio.on('joinrequest')
 @login_required
 def on_join_request():
