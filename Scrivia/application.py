@@ -148,6 +148,7 @@ def game_start(category):
     for player in lobby_players:
         if player in current_users:
             if current_users[player][0] == room:
+                current_users[player][1] = 0
                 current_users[player][2] = catlook
 
     # iterating thru the players in the lobby
@@ -195,7 +196,6 @@ def game_start(category):
                 # emitting a request to register the user points
                 emit("pointsregister", (username, points, catlook))
                 current_users[player][2] = None
-                current_users[player][1] = 0
     time.sleep(10)
 
 
@@ -203,8 +203,7 @@ def game_start(category):
 @login_required
 def TimeAttack_start():
     username = session["username"]
-    room = current_users[username][0]
-    lobby_players = [k for k,v in current_users.items() if v[0] == room]
+    room = username
     current_users[username][3] = 3
     
     questionset = set()
@@ -239,23 +238,20 @@ def TimeAttack_start():
 
         emit('newround', (answers, question, correct, lives, pointsdata), broadcast=True, room=room)
         time.sleep(5)
+
     emit('endfase', broadcast=True)
-    player = lobby_players[0]
-    if player in current_users:
-        if current_users[player][0] == room:
-            username = player
-            points = current_users[player][1]
-            category = current_users[player][2]
+    if username in current_users:
+        if current_users[username][0] == room:
+            points = current_users[username][1]
+            category = current_users[username][2]
 
             emit("pointsregister", (username, points, category))
-
-    current_users[player][1] = 0
+            current_users[username][1] = 0
     time.sleep(10)
 
-@app.route("/pointsrequest")
+@socketio.on("pointsrequest")
 @login_required
 def on_requestpoints():
-    print("test")
     username = session["username"]
     points = current_users[username][1]
     emit("pointsreturn", points)
