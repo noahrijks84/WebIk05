@@ -305,19 +305,23 @@ def handle_user_chat(message):
 def username():
     return session["username"]
 
+
 @app.route("/", methods=["GET"])
 @login_required
 def index():
     return render_template("index.html")
 
+
 @app.route("/landing", methods=["GET"])
 def landing():
     return render_template("landing.html")
+
 
 @app.route("/game", methods=["GET"])
 @login_required
 def game():
     return render_template("game.html")
+
 
 @app.route("/timeattack", methods=["GET"])
 @login_required
@@ -339,24 +343,7 @@ def check():
     data = not len(answer) > 0
 
     return jsonify(data)
-    
-    # # Get username from GET
-    # username = request.args.get("username")
 
-    # # Select all usernames from database
-    # users = scrivdb.execute("SELECT username FROM users")
-
-    # # Return False if username length less than 1
-    # if len(username) < 1:
-    #     return jsonify(False)
-
-    # # Return false if username exists
-    # for user in users:
-    #     if user["username"] == username:
-    #         return jsonify(False)
-
-    # # If username length greater than 1 and doesn't exist, return True
-    # return jsonify(True)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -406,10 +393,6 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-@app.route("/choose_leaderboards", methods=["GET"])
-@login_required
-def choose_leaderboards():
-    return render_template("choose_leaderboards.html")
 
 @app.route("/leaderboards_classic", methods=["GET", "POST"])
 @login_required
@@ -419,15 +402,15 @@ def leaderboards_classic():
     # List of the categories to send to HTML
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
-    # Show the the sum of the points of all the categories for the Classic game mode
-    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
+    # Retrieves the the sum of the points of all the categories for the Classic game mode
+    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM statistics WHERE points > 0  GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC LIMIT 10")
 
-    # Show the points per category for the Classic game mode
-    animals_points = scrivdb.execute("SELECT animals, username FROM statistics GROUP BY username ORDER BY animals DESC")
-    video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics GROUP BY username ORDER BY video_games DESC")
-    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics GROUP BY username ORDER BY celebrities DESC")
-    comics_points = scrivdb.execute("SELECT comics, username FROM statistics GROUP BY username ORDER BY comics DESC")
-    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics GROUP BY username ORDER BY general_knowledge DESC")
+    # Retrieves the points per category for the Classic game mode
+    animals_points = scrivdb.execute("SELECT animals, username FROM statistics WHERE animals > 0 GROUP BY username ORDER BY animals DESC LIMIT 10")
+    video_games_points = scrivdb.execute("SELECT video_games, username FROM statistics WHERE video_games > 0 GROUP BY username ORDER BY video_games DESC LIMIT 10")
+    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM statistics WHERE celebrities > 0 GROUP BY username ORDER BY celebrities DESC LIMIT 10")
+    comics_points = scrivdb.execute("SELECT comics, username FROM statistics WHERE comics > 0 GROUP BY username ORDER BY comics DESC LIMIT 10")
+    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM statistics WHERE general_knowledge > 0 GROUP BY username ORDER BY general_knowledge DESC LIMIT 10")
 
     return render_template("leaderboards_classic.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
@@ -474,7 +457,7 @@ def change_password():
             return apology("wrong password", 400)
 
         # Replace the old password
-        result = scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
+        scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
             request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
 
         return redirect("/")
@@ -490,14 +473,14 @@ def leaderboards_timeattack():
     categories = ["Animals", "Video Games", "Celebrities", "Comics", "General Knowledge"]
 
     # Show the the sum of the points of all the categories for the TimeAttack! game mode
-    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM timeattack GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC")
+    total_points = scrivdb.execute("SELECT *, SUM(animals + video_games + celebrities + comics + general_knowledge), username FROM timeattack WHERE points > 0 GROUP BY username ORDER BY SUM(animals + video_games + celebrities + comics + general_knowledge) DESC LIMIT 10")
 
     # Show the points per category for the TimeAttack! game mode
-    animals_points = scrivdb.execute("SELECT animals, username FROM timeattack GROUP BY username ORDER BY animals DESC")
-    video_games_points = scrivdb.execute("SELECT video_games, username FROM timeattack GROUP BY username ORDER BY video_games DESC")
-    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM timeattack GROUP BY username ORDER BY celebrities DESC")
-    comics_points = scrivdb.execute("SELECT comics, username FROM timeattack GROUP BY username ORDER BY comics DESC")
-    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM timeattack GROUP BY username ORDER BY general_knowledge DESC")
+    animals_points = scrivdb.execute("SELECT animals, username FROM timeattack WHERE animals > 0 GROUP BY username ORDER BY animals DESC LIMIT 10")
+    video_games_points = scrivdb.execute("SELECT video_games, username FROM timeattack WHERE video_games > 0 GROUP BY username ORDER BY video_games DESC LIMIT 10")
+    celebrities_points = scrivdb.execute("SELECT celebrities, username FROM timeattack WHERE celebrities > 0 GROUP BY username ORDER BY celebrities DESC LIMIT 10")
+    comics_points = scrivdb.execute("SELECT comics, username FROM timeattack WHERE comics > 0 GROUP BY username ORDER BY comics DESC LIMIT 10")
+    general_knowledge_points = scrivdb.execute("SELECT general_knowledge, username FROM timeattack WHERE general_knowledge > 0 GROUP BY username ORDER BY general_knowledge DESC LIMIT 10")
 
     return render_template("leaderboards_timeattack.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points, celebrities_points=celebrities_points, 
     comics_points=comics_points, general_knowledge_points=general_knowledge_points)
@@ -543,12 +526,56 @@ def register():
         scrivdb.execute("INSERT INTO statistics (username) VALUES(:username)", username=request.form.get("username"))
         scrivdb.execute("INSERT INTO timeattack (username) VALUES(:username)", username=request.form.get("username"))
 
+    # Rerun the login code to send the user to the index page after registration
+    # Forget any user_id
+    session.clear()
+
+    # User reached route via POST (as by submitting a form via POST)
+    if request.method == "POST":
+
+        # Ensure username was submitted
+        if not request.form.get("username"):
+            return apology("must provide username", 400)
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            return apology("must provide password", 400)
+
+        # Query database for username
+        rows = scrivdb.execute("SELECT * FROM users WHERE username = :username",
+                          username=request.form.get("username"))
+
+        # Ensure username exists and password is correct
+        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+            return apology("invalid username and/or password", 400)
+
+        # Remember which user has logged in
+        session["user_id"] = rows[0]["id"]
+        session["username"] = rows[0]["username"]
+
         # Redirect user to home page
         return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("register.html")
+
+
+@app.route("/profilepage", methods=["GET"])
+@login_required
+def profilepage():
+    date_joined = scrivdb.execute("SELECT date_joined FROM users WHERE username = :username",
+            username=session["username"])
+
+    # Retrieves the user's personal statistics
+    personal_statistics_classic = scrivdb.execute("SELECT * FROM statistics WHERE username = :username",
+            username=session["username"])
+    personal_statistics_timeattack = scrivdb.execute("SELECT * FROM timeattack WHERE username = :username",
+            username=session["username"])
+
+    return render_template("profilepage.html", username=session["username"], date_joined=date_joined[0]['date_joined'], personal_statistics_classic=personal_statistics_classic,
+    personal_statistics_timeattack=personal_statistics_timeattack)
+
 
 def errorhandler(e):
     """Handle error"""
