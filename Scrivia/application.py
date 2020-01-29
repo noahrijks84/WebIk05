@@ -466,7 +466,7 @@ def change_password():
             return apology("wrong password", 400)
 
         # Replace the old password
-        result = scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
+        scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
             request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
 
         return redirect("/")
