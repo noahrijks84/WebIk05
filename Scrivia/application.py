@@ -128,7 +128,7 @@ def get_questions(category, type):
     json_response = response.json()['results']
     return json_response
 
-# This function removes things like "&quot;" and replaces them with a quote   
+# This function removes things like "&quot;" and replaces them with an actual quote   
 def cleanhtml(raw_html):
     cleanr = re.compile('&.*?;')
     cleantext = re.sub(cleanr, "'", raw_html)
@@ -137,14 +137,17 @@ def cleanhtml(raw_html):
 # Making the question usable in terms of format
 def call_question(cate, diff, questionset):
     question = get_questions(cate, diff)[0]
+
+    # If there are numbers in intlist, call_question is called again, because drawing numbers defeats the purpose of the game
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
     if len(intlist) >= 1 or question['correct_answer'] in questionset:
         return call_question(cate, diff, questionset)
     else:
+        # question is a dict, from which we can select the answers and questions to send to the game definitions
         answers = question["incorrect_answers"]
         answers.append(question["correct_answer"])
 
-        # We need to clean all
+        # We need to get rid of the &quot; that is, sometimes, in between of the answer strings
         new_answer_0 = cleanhtml(answers[0])
         new_answer_1 = cleanhtml(answers[1])
         new_answer_2 = cleanhtml(answers[2])
@@ -152,26 +155,35 @@ def call_question(cate, diff, questionset):
 
         # This list contains all answers
         new_answers = [new_answer_0, new_answer_1, new_answer_2, new_answer_3]
+
+        # The answers are shuffled, otherwise they would always be in the same spot in the list
         random.shuffle(new_answers)
-        return question["question"], new_answers, question["correct_answer"]
+        new_question = cleanhtml(question["question"])
+        return new_question, new_answers, question["correct_answer"]
 
 # Running a game for players inside the specific lobby
 @socketio.on('startgame')
 @login_required
 def game_start(category):
     username = session["username"]
+
+    
     room = current_users[username][0]
+
+    # Checks which users are in the lobby
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
+
     questionset = set()
     catlook = category 
 
+    # This for loop assigns the right values to the right variables
     for player in lobby_players:
         if player in current_users:
             if current_users[player][0] == room:
                 current_users[player][1] = 0
                 current_users[player][2] = catlook
 
-    # iterating thru the players in the lobby
+    # Iterating thru the players in the lobby
     for host in lobby_players:
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
@@ -182,41 +194,39 @@ def game_start(category):
 
         triv = call_question(category, 'timeattack', questionset)
         
+        # Correctly selects all information by index
         question = triv[0]
         all_answers = triv[1]
         correct = triv[2]
 
-        random.shuffle(all_answers)
 
         questionset.add(correct)
 
         current_hosts[room] = host
         correct_answers[room] = correct
 
-        questionset.add(correct)
-
-        # formatting data to display with the host player
+        # Formatting data to display with the host player
         hostdata = question + " answer: " + correct
 
-        # letting javascript run the drawing fase at the client
+        # Letting javascript run the drawing fase at the client
         emit('fase1', (host, hostdata), broadcast=True, room=room)
         time.sleep(10)
 
-        # letting javascript run the guessing fase at the client
+        # Letting javascript run the guessing fase at the client
         emit('fase2', (host, all_answers, question, correct), broadcast=True, room=room)
         time.sleep(10)
 
-    # letting javascript run the endfase of the game finishing everything up
+    # Letting javascript run the endfase of the game finishing everything up
     emit('endfase', broadcast=True, room=room)
-    # iterating through players left in te lobby
+    # Iterating through players left in te lobby
     for player in lobby_players:
         if player in current_users:
             if current_users[player][0] == room:
-                # clearing all the player data
+                # Clearing all the player data
                 username = player
                 points = current_users[player][1]
 
-                # emitting a request to register the user points
+                # Emitting a request to register the user points
                 emit("pointsregister", (username, points, catlook))
                 current_users[player][2] = None
     time.sleep(10)
@@ -225,40 +235,43 @@ def game_start(category):
 @socketio.on('startTimeAttack')
 @login_required
 def TimeAttack_start():
+    """Code van TimeAttack!, de gamemode waar je binnen 90 seconden vragen moet beantwoorden"""
     username = session["username"]
     room = username
     current_users[username][3] = 3
 
+    # This set keeps track of which questions were already asked, so the game doesn't send the same question twice
     questionset = set()
+
+    # The while loop runs on a timer, we used code written by stackoverflow user Petr Krampl
+    # (link to code) https://stackoverflow.com/questions/13293269/how-would-i-stop-a-while-loop-after-n-amount-of-time
     timeout = 90
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
-
+        # If the player has 0 hearts, the game ends
         if current_users[username][3] <= 0:
             break
+        
         lives = current_users[username][3]
         catlook = current_users[username][2]
 
+        # Select the category that the host chose, and update category so the right questions are chosen
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
                             '27', '15', '26', '29', '9']
         for cat in range(int(len(category_list) / 2.0)):
             if category_list[cat] == catlook:
                 category = category_list[cat + 5]
 
-
-        # correct = triv['correct_answer']
-        # question = triv["question"]
-        # answers = triv["incorrect_answers"]
-
         triv = call_question(category, 'timeattack', questionset)
-        print(triv)
+        
         question = triv[0]
         all_answers = triv[1]
         correct = triv[2]
 
+        # Shuffles
         random.shuffle(all_answers)
 
-        questionset.add(correct)
+        
 
         correct_answers[room] = correct
         
