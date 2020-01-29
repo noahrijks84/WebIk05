@@ -175,7 +175,7 @@ def game_start():
         time.sleep(15)
 
     # letting javascript run the endfase of the game finishing everything up
-    emit('endfase', pointsdata, broadcast=True)
+    emit('endfase', pointsdata, broadcast=True, room=room)
     # iterating thru players left in te lobby
     for player in lobby_players:
         if player in current_users:
