@@ -128,7 +128,7 @@ def get_questions(category, type):
     
 # Making the question usable in terms of format
 def call_question(cate, diff, questionset):
-    question = get_questions(cate, diff, questionset)[0]
+    question = get_questions(cate, diff)[0]
     intlist =  [int(i) for i in question['correct_answer'].split() if i.isdigit()]
     if len(intlist) >= 1 or question['correct_answer'] in questionset:
         return call_question(cate, diff, questionset)
