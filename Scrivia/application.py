@@ -23,11 +23,16 @@ from helpers import apology, login_required
 import re
 import logging
 import json
+import re
+import logging
 
 # Configure application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, manage_session=False)
+
+# show prints
+logging.basicConfig(level=logging.DEBUG)
 
 # Ensure responses aren't cached
 @app.after_request
@@ -79,12 +84,12 @@ def on_leave_request():
 # Adding the playerr to the chosen lobby
 @socketio.on('lobbyrequest')
 @login_required
-def on_lobby_request(lobby, category, gamemode):
+def on_lobby_request(lobby, category):
     username = session["username"]
     print(category)
     join_room(lobby)
     hearts = 0
-    current_users[username] = [lobby, 0, category, gamemode, hearts]
+    current_users[username] = [lobby, 0, category, hearts]
 
 # readding the user to the chosen lobby when entering the game page
 @socketio.on('joinrequest')
@@ -168,14 +173,14 @@ def game_start():
 
         # letting javascript run the drawing fase at the client
         emit('fase1', (host, hostdata, pointsdata), broadcast=True, room=room)
-        time.sleep(10)
+        time.sleep(30)
 
         # letting javascript run the guessing fase at the client
-        emit('fase2', (host, answers, question, correct), broadcast=True, room=room)
-        time.sleep(10)
+        emit('fase2', (host, answers, question, correct, pointsdata), broadcast=True, room=room)
+        time.sleep(15)
 
     # letting javascript run the endfase of the game finishing everything up
-    emit('endfase', broadcast=True)
+    emit('endfase', pointsdata, broadcast=True, room=room)
     # iterating thru players left in te lobby
     for player in lobby_players:
         if player in current_users:
@@ -186,7 +191,7 @@ def game_start():
                 category = current_users[player][2]
 
                 # emitting a request to register the user points
-                emit("pointsregister", (username, points, category))
+                emit("pointsregister", (username, points, category, pointsdata))
 
         print(player + ": " + str(current_users[player][1]))
         current_users[player][1] = 0
@@ -199,16 +204,16 @@ def TimeAttack_start():
     username = session["username"]
     room = current_users[username][0]
     lobby_players = [k for k,v in current_users.items() if v[0] == room]
-    current_users[username][4] = 3
+    current_users[username][3] = 3
     
     questionset = set()
     timeout = 90
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
 
-        if current_users[username][4] <= 0:
+        if current_users[username][3] <= 0:
             break
-        lives = current_users[username][4]
+        lives = current_users[username][3]
         catlook = current_users[username][2]
 
         category_list = ['animals', 'video_games', 'celebrities', 'comics', 'general_knowledge',
@@ -427,17 +432,14 @@ def leaderboards_classic():
     return render_template("leaderboards_classic.html", total_points=total_points, categories=categories, animals_points=animals_points, video_games_points=video_games_points,
     celebrities_points=celebrities_points, comics_points=comics_points, general_knowledge_points=general_knowledge_points)
 
-@app.route("/change_password", methods=["GET", "PUT"])
+@app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
     # password = request.form.get("password")
     # new_password = request.form.get("new_password")
     # new_confirm = request.form.get("new_confirm")
 
-    if request.method == "PUT":
-
-        print("hoi")
-
+    if request.method == "POST":
         # Make sure password was acknowledged
         if not request.form.get("password"):
             return apology("must provide old password", 400)
@@ -466,20 +468,14 @@ def change_password():
         elif not request.form.get("new_confirm") == request.form.get("new_password"):
             return apology("passwords must match", 400)
 
-        print("hoi")
-
         # Make sure password satisfies
         password_hash = scrivdb.execute("SELECT hash FROM users WHERE id = :user", user=session["user_id"])
         if not check_password_hash(password_hash[0]["hash"], request.form.get("password")):
             return apology("wrong password", 400)
 
-        print("hoi")
-
         # Replace the old password
         result = scrivdb.execute("UPDATE users SET hash= :hash WHERE id= :user", hash=generate_password_hash(
             request.form.get("new_password"), method='pbkdf2:sha256', salt_length=8), user=session["user_id"])
-        print(result)
-        print("hoi")
 
         return redirect("/")
     else:
