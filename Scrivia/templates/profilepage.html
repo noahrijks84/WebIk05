@@ -1,17 +1,70 @@
 {% extends "layout.html" %}
 
+{% block headscript %}
+{% endblock %}
+
 {% block title %}
-    Log In
+LProfile Page
 {% endblock %}
 
 {% block main %}
-    <form action="/login" method="post">
-        <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
-        </div>
-        <div class="form-group">
-            <input class="form-control" name="password" placeholder="Password" type="password">
-        </div>
-        <button class="btn btn-primary buttongeneral" type="submit">Log In</button>
-    </form>
+<div id="wrapper">
+    <div id="profilepagecontent">
+        <h1 style="color:#FAA916">hello, {{ username }}</h1>
+        <p style="color:#FFFFFF">
+            <b>Date joined:</b> {{ date_joined }}<br>
+            <a style="color:#FAA916" href="change_password" id="changepassword">Change password.</a>
+        </p>
+        <h3 style="color:#FAA916">Personal statistics classic:</h3>
+        <table id="combined" align="center">
+            <thead align="left">
+                <th>Username</th>
+                <th>Total Points</th>
+                <th>Animals</th>
+                <th>Video Games</th>
+                <th>Celebrities</th>
+                <th>Comics</th>
+                <th>General Knowledge</th>
+            </thead>
+            <tbody>
+                {% for player in total_points_classic %}
+                <tr align="left">
+                    <td>{{ player["username"] }}</td>
+                    <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
+                    <td>{{ player["animals"] }}</td>
+                    <td>{{ player["video_games"] }}</td>
+                    <td>{{ player["celebrities"] }}</td>
+                    <td>{{ player["comics"] }}</td>
+                    <td>{{ player["general_knowledge"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h3 style="color:#FAA916">Personal statistics timeattack:</h3>
+        <table id="combined" align="center">
+            <thead align="left">
+                <th>Username</th>
+                <th>Total Points</th>
+                <th>Animals</th>
+                <th>Video Games</th>
+                <th>Celebrities</th>
+                <th>Comics</th>
+                <th>General Knowledge</th>
+            </thead>
+            <tbody>
+                {% for player in total_points_timeattack %}
+                <tr align="left">
+                    <td>{{ player["username"] }}</td>
+                    <td>{{ player["SUM(animals + video_games + celebrities + comics + general_knowledge)"] }}</td>
+                    <td>{{ player["animals"] }}</td>
+                    <td>{{ player["video_games"] }}</td>
+                    <td>{{ player["celebrities"] }}</td>
+                    <td>{{ player["comics"] }}</td>
+                    <td>{{ player["general_knowledge"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

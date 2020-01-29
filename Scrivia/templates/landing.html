@@ -4,18 +4,38 @@
 {% endblock %}
 
 {% block title %}
-    Lobby
+Landing Page
 {% endblock %}
 
 {% block main %}
-    <div id="wrapper">
-        <div id="landingcontent">
-            
-        </div>
-    </div>
+<script>
+window.onload = function () {
+    document.getElementById("navbarid").style.display = "none";
+}
+</script>
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
-    <script type="text/javascript" charset="utf-8">
-    var socket = io();
-    </script>
+<div id="wrapper">
+    <div id="landingcontent">
+        <img src="/static/whitelogo.png" alt="scrivia logo" width="475" height="315" id="logo">
+        <p style="color:#FFFFFF">Scrivia is an online, real-time multiplayer game where you can draw, guess and answer trivia!
+            <br>
+            Show off your creativity by drawing trivia questions and competing with your friends. You draw the answer to
+            a question, and they guess it. <br>
+            If you don't feel like playing with friends, try our single-player, adrenaline-filled TimeAttack! mode!
+            <b>Completely Free!</b></p>
+        <button class="registernowbutton" id="registernow" align="center">Register Now</button>
+        <p style="color:#FFFFFF">If you've already registered, <a style="color:#FAA916" href="login" id="login">log in.</a></p>
+    </div>
+</div>
+<script type="text/javascript" charset="utf-8">
+    document.getElementById("registernow").addEventListener("click", function () {
+        $.ajax({
+            type: "GET",
+            url: '/register',
+            success: function (data) {
+                window.location.href = "register"
+            }
+        });
+    });
+</script>
 {% endblock %}
