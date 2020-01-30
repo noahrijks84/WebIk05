@@ -39,7 +39,6 @@ def after_request(response):
     return response
 
 # Configure databases to use SQLite database
-trivdb = SQL("sqlite:///trivdb.db")
 scrivdb = SQL("sqlite:///scrivia.db")
 
 # These dictionaries are used to save data used in multiple functions
