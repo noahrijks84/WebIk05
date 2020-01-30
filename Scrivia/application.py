@@ -258,7 +258,7 @@ def TimeAttack_start():
 
     # The while loop runs on a timer, we used code written by stackoverflow user Petr Krampl
     # (link to code) https://stackoverflow.com/questions/13293269/how-would-i-stop-a-while-loop-after-n-amount-of-time
-    timeout = 90
+    timeout = 40
     timeout_start = time.time()
     while time.time() < timeout_start + timeout:
         # If the player has 0 hearts, the game ends
