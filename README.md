@@ -25,6 +25,11 @@ Sta je niet tussen de top 10 en ben je toch benieuwd naar je punten? Ga naar de 
 #### Waar kan ik wat vinden?
 De gehele applicatie staat in de *"Scrivia"* map. Ben je op zoek naar de **"Meat & Potatoes"** van het programma? Dit staat allemaal in *"applications.py"* en de *templates* folder. Hier is respectievelijk de *controller* en de *view*. De *model* (de user-gegevens en de statistieken) kan je vinden in de *"scrivia.db"* file. Binnen de *static* folder vindt je de javascript files (de plug-in die we hebben gebruikt voor het teken-gedeelte en een functie voor het verstoppen van tables) en de plaatjes die we hebben gebruikt voor de website. In *helpers.py* vindt je helpers voor de logout en apology functies en *ngrok.exe* wordt gebruikt om de website snel online te kunnen zetten.
 
+#### Productvideo
+De productvideo is te vinden onder de volgende link:
+https://youtu.be/V-y5h6eNlZY
+
+
 
 
 
