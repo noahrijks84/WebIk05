@@ -104,22 +104,47 @@ import re
 
 scrivdb = SQL("sqlite:///scrivia.db")
 
-scrivdb.execute("UPDATE timeattack SET comics = comics + :other WHERE username = :username",
-                 other=57,
+scrivdb.execute("UPDATE statistics SET comics = comics + :other WHERE username = :username",
+                 other=87,
                  username='sava8')
-scrivdb.execute("UPDATE timeattack SET points = points + :other WHERE username = :username",
-                 other=57,
+scrivdb.execute("UPDATE statistics SET points = points + :other WHERE username = :username",
+                 other=87,
                  username='sava8')
 
-
-scrivdb.execute("UPDATE timeattack SET points = points + :other WHERE username = :username",
-                 other=30,
+scrivdb.execute("UPDATE statistics SET animals = animals + :other WHERE username = :username",
+                 other=33,
+                 username='NOAH')
+scrivdb.execute("UPDATE statistics SET points = points + :other WHERE username = :username",
+                 other=33,
                  username='NOAH')
 
+scrivdb.execute("UPDATE statistics SET general_knowledge = points + :other WHERE username = :username",
+                 other=72,
+                 username='boffskipop')
+scrivdb.execute("UPDATE statistics SET points = points + :other WHERE username = :username",
+                 other=72,
+                 username='boffskipop')
 
-
-
-
+scrivdb.execute("UPDATE statistics SET comics = comics + :other WHERE username = :username",
+                 other=63,
+                 username='rogerroger')
+scrivdb.execute("UPDATE statistics SET points = points + :other WHERE username = :username",
+                 other=63,
+                 username='rogerroger')
+                
+scrivdb.execute("UPDATE statistics SET celebrities = celebrities + :other WHERE username = :username",
+                 other=90,
+                 username='ILikeDrawing')
+scrivdb.execute("UPDATE statistics SET points = points + :other WHERE username = :username",
+                 other=90,
+                 username='ILikeDrawing')
+                 
+scrivdb.execute("UPDATE statistics SET general_knowledge = general_knowledge + :other WHERE username = :username",
+                 other=87,
+                 username='iLikeTrivia')
+scrivdb.execute("UPDATE statistics SET points = points + :other WHERE username = :username",
+                 other=87,
+                 username='iLikeTrivia')
 
 
 
